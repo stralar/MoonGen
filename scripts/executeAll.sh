@@ -5,7 +5,7 @@
 # username@hostname
 serverPC="lars@pc1"
 clientPC="lars@pc87"
-moonGenPC="lars@86"
+moonGenPC="lars@pc86"
 dagPC="stratmann@DAG"
 
 
@@ -16,8 +16,8 @@ destInterface="2"
 
 destIPAdress="10.1.3.3"
 
-moonGenScript="examples/l2-forward-psring-software-latency-rate-txDescs.lua"
-testName="iperf-psr-soft-udp-"
+moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-txDescs.lua"
+testName="iperf-psr-soft-udp-50Mbps-"
 
 iperfExecuteTime="10"
 dagExecuteTime=$(($iperfExecuteTime + 10))
@@ -25,7 +25,8 @@ moonGenExecuteTime=$((dagExecuteTime + 10))
 waitTime=$((moonGenExecuteTime))
 
 # List from Bandwidth length to test
-rateList="5 10 50 100"
+rateList="1 5" # 5 10 15 20 25 30 35"
+ #10 50 100"
 # List from latencies to test
 latencyList="0"
 # List from RingSize, how much Packages will stay in the ring
@@ -33,16 +34,16 @@ ringSizeList="1"
 
 
 # List form the MTU that should be tested
-byteSizeListDAG=(1500)
+byteSizeListDAG=(1400)
 byteSizeListIperf=(1.4)
 
 iperfServerCommand="iperf3 -s"
 
 
 # Cleaning
-ssh serverPC 'sudo killall iperf3' &
-ssh moonGenPC 'sudo killall MoonGen' &
-ssh clientPC 'sudo killall iperf3'&
+ssh $serverPC 'sudo killall iperf3' &
+ssh $moonGenPC 'sudo killall MoonGen' &
+ssh $clientPC 'sudo killall iperf3'&
 
 sleep 1
 
@@ -57,33 +58,33 @@ do
     do
         for q in $ringSizeList;
         do
-			for (( i=0; i<${#byteSizeListDAG[@]}; i++ ));
-			do
-                echo "'$testName'r$r-l$l-q$q-b${byteSizeListDAG[$i]}"
+			#for (( i=0; i<${#byteSizeListDAG[@]}; i++ ));
+			#do
+            echo "$testName-r$r-l$l-q$q"
 
-                moonGenMainCommand="cd MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r $r $r -l $l $l -q $q $q"
-                moonGenTerminateCommand="sudo killall MoonGen"
-                iperfClientCommand="iperf3 -c $destIPAdress -t $iperfExecuteTime -u -l ${byteSizeListIperf[$i]}K -b '$r'M"
-                dagCommad="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-l$l-q$q-b${byteSizeListDAG[$i]}.erf"
-
-
-                ssh $moonGenPC $moonGenMainCommand &
-
-                sleep 5
-
-                ssh $dagPC $dagCommad &
-
-                sleep 2
-
-                ssh $clientPC $iperfClientCommand &
+            moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 50 50 -l $l $l -q $q $q"
+            moonGenTerminateCommand="sudo killall MoonGen"
+            iperfClientCommand="iperf3 -c $destIPAdress -t $iperfExecuteTime -u -b '$r'M"
+            dagCommad="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-l$l-q$q.erf"
 
 
-                sleep $waitTime
+            ssh $moonGenPC $moonGenMainCommand &
 
-                ssh $moonGenPC $moonGenTerminateCommand &
+            sleep 5
 
-                sleep 5
-			done
+            ssh $dagPC $dagCommad &
+
+            sleep 2
+
+            ssh $clientPC $iperfClientCommand &
+
+
+            sleep $waitTime
+
+            ssh $moonGenPC $moonGenTerminateCommand &
+
+            sleep 5
+			#done
         done
     done
 done

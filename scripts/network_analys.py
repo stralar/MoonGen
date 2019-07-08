@@ -13,7 +13,7 @@ parser.add_argument('-fs', dest='firstSend', action='store_true', help='time in 
 parser.add_argument('-nd', dest='noDrop', action='store_true', help='time in Fly, Skip droped packages')
 parser.add_argument('--all', dest='all', action='store_true', help='execute all functions')
 parser.add_argument('--create-nd', dest='create_nd', action='store_true', help='create a ne file without droped packages')
-parser.add_argument('-udp', dest='udp', action='store_true', help='If the Packages are UDP')
+parser.add_argument('--udp', dest='udp', action='store_true', help='If the Packages are UDP')
 parser.add_argument('-b', dest='bandWidthInterval', type=float, help='Set the Bandwidth Interval in sec')
 
 args = parser.parse_args()
