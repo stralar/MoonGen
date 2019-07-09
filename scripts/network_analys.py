@@ -371,6 +371,8 @@ def pcktInFlyFirstSendUDP():
     fileSaveNameByte = fileName + '_bytes_in_fly.csv'
     fileSaveNameLatency = fileName + '_latency.csv'
     fileSaveNameDroped = fileName + '_droped.csv'
+    fileSaveNameDetails = fileName + ' details.csv'
+
 
     csvArray = []
     with open(filePath, 'r') as csvDataFile:
@@ -382,14 +384,20 @@ def pcktInFlyFirstSendUDP():
     resultWriteByte = open(fileSaveNameByte, 'w')
     resultWriteLatency = open(fileSaveNameLatency, 'w')
     resultWriteDroped = open(fileSaveNameDroped, 'w')
+    resultWriteDetails = open(fileSaveNameDetails, 'w')
+
 
     startTimeStamp = float(csvArray[0][1])
 
     packageInFlyCount = 0
     byteInFlyCount = 0
 
+    arrivedPackageCount = 0
+    dropedPackageCount = 0
+
     packageInFly = []
 
+    sumBytes = 0
 
     # Mark the droped Packages
     # Actual the mark is on the 5. Postion from the csv File this is the srcPort
@@ -404,7 +412,9 @@ def pcktInFlyFirstSendUDP():
             #print(droped)
             if droped:
                 csvArray[i][7] = "droped"
-                pass
+                dropedPackageCount += 1
+            else:
+                arrivedPackageCount += 1
 
     # real Function
     for i in range(len(csvArray)):
@@ -435,6 +445,8 @@ def pcktInFlyFirstSendUDP():
                 byteInFlyCount += int(csvArray[i][8])
 
                 packageInFly.append([ipId, timeStampSrc, packageInFlyCount, byteInFlyCount])
+
+                sumBytes += int(csvArray[i][8])
                 
 
             # If the Package is arrived
@@ -484,6 +496,12 @@ def pcktInFlyFirstSendUDP():
                 resultWriteDroped.close()
             pass
 
+    detailsString = "throughput:\t" + str(sumBytes / (arrivedPackageCount + dropedPackageCount)) + "\tarrived:\t" + str(arrivedPackageCount) + "\tdropped:\t" + str(dropedPackageCount)
+
+    resultWriteDetails = open(fileSaveNameDetails, 'w')
+    resultWriteDetails.write(detailsString)
+    resultWriteDetails.close()
+
     print("Finished pcktInFlyFirstSendUDP in " + str(time.clock()) + " seconds")
 
 
@@ -492,6 +510,7 @@ def pcktInFlyFirstSendReverseUDP():
     fileSaveNameByte = fileName + '_bytes_in_fly.csv'
     fileSaveNameLatency = fileName + '_latency.csv'
     fileSaveNameDroped = fileName + '_droped.csv'
+    fileSaveNameDetails = fileName + ' details.csv'
 
     csvArray = []
     with open(filePath, 'r') as csvDataFile:
@@ -503,13 +522,19 @@ def pcktInFlyFirstSendReverseUDP():
     resultWriteByte = open(fileSaveNameByte, 'w')
     resultWriteLatency = open(fileSaveNameLatency, 'w')
     resultWriteDroped = open(fileSaveNameDroped, 'w')
+    resultWriteDetails = open(fileSaveNameDetails, 'w')
 
     startTimeStamp = float(csvArray[0][1])
 
     packageInFlyCount = 0
     byteInFlyCount = 0
 
+    arrivedPackageCount = 0
+    dropedPackageCount = 0
+
     packageInFly = []
+
+    sumBytes = float(0)
 
     # real Function
     for i in range(len(csvArray)):
@@ -527,17 +552,19 @@ def pcktInFlyFirstSendReverseUDP():
             # thow an exception -> do nothing and go to the next value
             int(csvArray[i][7])
 
-            # If the Package is sended for the first time
+            # If the Package is arrived
             # if (ipId not in ipIdSend and float(csvArray[i][2]) == interfaceSource):
             if (float(csvArray[i][2]) == interfaceDestination):
 
                 destinationPckt = csvArray[i]
+                arrivedPackageCount += 1
 
                 packageInFlyCount += 1
                 byteInFlyCount += float(csvArray[i][8])
+                sumBytes += float(csvArray[i][8])
 
 
-                for j in range(i-1, -1, -1):
+            for j in range(i-1, -1, -1):
 
                     if (float(csvArray[j][2]) == interfaceDestination):
 
@@ -545,6 +572,7 @@ def pcktInFlyFirstSendReverseUDP():
                         byteInFlyCount += float(csvArray[j][8])
 
                     if (float(csvArray[j][2]) == interfaceSource and destinationPckt[9] == csvArray[j][9]):
+
 
                         timeStamp = float(csvArray[j][1]) - startTimeStamp
 
@@ -663,8 +691,8 @@ if udpTrue:
         if udpTrue or firstSend:
             try:
                 print("Start Thread: Package in Fly from the first sended Package")
-                #threading.Thread(target=pcktInFlyFirstSendUDP, args=()).start()
-                threading.Thread(target=pcktInFlyFirstSendReverseUDP, args=()).start()
+                threading.Thread(target=pcktInFlyFirstSendUDP, args=()).start()
+                #threading.Thread(target=pcktInFlyFirstSendReverseUDP, args=()).start()
 
                 
             except:
