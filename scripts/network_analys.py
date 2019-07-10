@@ -649,10 +649,22 @@ def bandwidthUDP():
                 destinationPckt = csvArray[i]
                 timeStampDest = float(destinationPckt[1]) - startTimeStamp
 
-                if ((timeStampDest - firstInIntervall) < bandWidthInterval):
+
+                if(i == len(csvArray) - 1):
+                    actualBandwidth = byteTransfared / bandWidthInterval
+                    byteString = str(ipId) + "\t" + str(timeCounter - 1 + timeStampDest - firstInIntervall) + "\t" + str(actualBandwidth * 8) + "\n"
+
+                    resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
+                    resultWriteBandwidth.write(byteString)
+                    resultWriteBandwidth.close()
+
+                    byteTransfared = 0
+                    timeCounter += bandWidthInterval
+                    firstInIntervall = float(destinationPckt[1]) - startTimeStamp
+                    break
+                elif((timeStampDest - firstInIntervall) < bandWidthInterval):
                     # die 24 Byte kommen von preamble and inter-packe, die tShark substrahiert
                     byteTransfared += float(destinationPckt[8])# + 20
-
                 else:
                     actualBandwidth = byteTransfared / bandWidthInterval
 
@@ -666,11 +678,11 @@ def bandwidthUDP():
                     timeCounter += bandWidthInterval
                     firstInIntervall = float(destinationPckt[1]) - startTimeStamp
 
-
-
         except ValueError as e:
 
             pass
+
+
 
     print("Finished Bandwidth")
 
