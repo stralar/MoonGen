@@ -89,14 +89,15 @@ do
                 #moonGenTerminateCommand="sudo killall MoonGen"
                 #clientCommand="iperf3 -c $destIPAdress -t $iperfExecuteTime -u -b '$r'M -l 1.4K"
                 clientCommand="./rnc/rude/rude/rude -s rnc/rude/udp-1460-'$r'Mbps-2sec.cfg"
-                dagCommad="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-l$l-q$q-t$t.erf"
+                dagCommand="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-l$l-q$q-t$t.erf"
+                helperCommand="ssh $dagPC $dagCommand &"
 
 
                 #ssh $moonGenPC $moonGenMainCommand &
 
                 #sleep 5
 
-                ssh $dagPC $dagCommad &
+                ssh $clientPC $helperCommand &
 
                 sleep 2
 
