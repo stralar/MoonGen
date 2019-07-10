@@ -8,3 +8,15 @@ nodeC    ->  nodeA
 DAG:
     receive: 2
     transmit: 0
+
+NodeA, pc1
+130.75.73.140
+
+NodeB, pc86
+130.75.73.225
+
+NodeC, pc87
+130.75.73.226
+
+DAG
+130.75.73.131

@@ -1,6 +1,6 @@
 hier werde ich ich meine Ergebnisse zeit-chronologisch reinstellen
 10.07.19:
-Name: test0
+Name:
 Erklärung:
     Heute werde ich erste einfache Tests mit dem unveränderten Script "examples/l2-forward-psring-hybrid-latency-rate.lua" durchführen.
     Die RingSize ist auf 280 da im Paper davon ausgegangen wird das die Queue 280 Pakete groß ist.
@@ -15,3 +15,4 @@ Was gemacht wurde:
 Ergebnis:
     rude&crude cfg erfolgreich erstellt und getestet.
     "executeAll.sh" script für rude&crude angepasst
+    bits per intervall im python script angepasst
