@@ -10,20 +10,21 @@ dagPC="stratmann@DAG"
 
 
 
-srcInterface="3"
-destInterface="2"
+srcInterface="2"
+destInterface="3"
 
 
-destIPAdress="10.1.3.3"
+destIPAdress="10.1.3.2"
 
 moonGenScript="examples/l2-forward-psring-hybrid-latency-rate.lua"
-#testName="rnc-psr-t1-"
-testName="iperf-psr-t01-"
+testName="rnc-psr-t01-"
+#testName="iperf-psr-t01-"
 
 iperfExecuteTime="2"
-dagExecuteTime=$((iperfExecuteTime + 10))
-moonGenExecuteTime=$((dagExecuteTime + 10))
-waitTime=$((moonGenExecuteTime))
+dagExecuteTime=$((iperfExecuteTime + 5))
+moonGenExecuteTime=$((dagExecuteTime + 5))
+#waitTime=$((moonGenExecuteTime))
+waitTime=$((dagExecuteTime))
 
 # List from Bandwidth length to test
 rateList="1 5 10" # 5 10 15 20 25 30 35"
@@ -35,19 +36,22 @@ latencyList="0"
 ringSizeList="280"
 
 # number of similar tests
-testNumber=1
+testNumber=2
 
 # List form the MTU that should be tested
 byteSizeListDAG=(1400)
 byteSizeListIperf=(1.4)
 
-iperfServerCommand="iperf3 -s"
-
+#serverCommand="iperf3 -s"
+serverCommand="./rnc/rude/crude/crude"
 
 # Cleaning
-ssh $serverPC 'sudo killall iperf3' &
+#ssh $serverPC 'sudo killall iperf3' &
+ssh $serverPC 'sudo killall crude' &
 ssh $moonGenPC 'sudo killall MoonGen' &
-ssh $clientPC 'sudo killall iperf3'&
+#ssh $clientPC 'sudo killall iperf3'&
+ssh $clientPC 'sudo killall rude' &
+
 
 sleep 1
 
@@ -61,7 +65,7 @@ sleep 5
 
 
 #Initial
-ssh lars@pc1 $iperfServerCommand &
+ssh lars@pc1 $serverCommand &
 sleep 1
 
 for r in $rateList;
@@ -83,7 +87,8 @@ do
                 #moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l $l $l -q $q $q"
 
                 #moonGenTerminateCommand="sudo killall MoonGen"
-                iperfClientCommand="iperf3 -c $destIPAdress -t $iperfExecuteTime -u -b '$r'M -l 1.4K"
+                #clientCommand="iperf3 -c $destIPAdress -t $iperfExecuteTime -u -b '$r'M -l 1.4K"
+                clientCommand="./rnc/rude/rude/rude -s rnc/rude/udp-1460-'$r'Mbps-2sec.cfg"
                 dagCommad="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-l$l-q$q-t$t.erf"
 
 
@@ -95,7 +100,7 @@ do
 
                 sleep 2
 
-                ssh $clientPC $iperfClientCommand &
+                ssh $clientPC $clientCommand &
 
 
                 sleep $waitTime
@@ -110,4 +115,5 @@ do
     done
 done
 ssh $moonGenPC $moonGenTerminateCommand &
-ssh -t $serverPC 'sudo killall iperf3' &
+#ssh -t $serverPC 'sudo killall iperf3' &
+ssh -t $serverPC 'sudo killall crude' &

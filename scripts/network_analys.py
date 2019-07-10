@@ -651,7 +651,7 @@ def bandwidthUDP():
 
                 if ((timeStampDest - firstInIntervall) < bandWidthInterval):
                     # die 24 Byte kommen von preamble and inter-packe, die tShark substrahiert
-                    byteTransfared += float(destinationPckt[8]) + 24
+                    byteTransfared += float(destinationPckt[8])# + 20
 
                 else:
                     actualBandwidth = byteTransfared / bandWidthInterval

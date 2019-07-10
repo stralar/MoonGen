@@ -14,4 +14,4 @@ Was gemacht wurde:
     
 Ergebnis:
     rude&crude cfg erfolgreich erstellt und getestet.
-    
+    "executeAll.sh" script für rude&crude angepasst
