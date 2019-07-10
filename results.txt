@@ -8,4 +8,10 @@ Erklärung:
     "network_analys.py" script angepasst und um den Druchfluss Mbps zu berechen habe ich in der Datei für "_details" die insgesammt erfolgreich,
     gesendetetn Bytes mal 8 damit es Bits werden und dann durch 2 damit wir Mbps bekommen angepasst. 
     
+Was gemacht wurde:
+    Ich habe mein python script angepasst so das bei -b jetzt "bits per intervall(s)" ich herraus bekomme
+    rude & crude cfg Datein erstellt von 1 -50 in 5er schritten.
+    
 Ergebnis:
+    rude&crude cfg erfolgreich erstellt und getestet.
+    
