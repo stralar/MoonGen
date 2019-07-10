@@ -14,7 +14,7 @@ parser.add_argument('-nd', dest='noDrop', action='store_true', help='time in Fly
 parser.add_argument('--all', dest='all', action='store_true', help='execute all functions')
 parser.add_argument('--create-nd', dest='create_nd', action='store_true', help='create a ne file without droped packages')
 parser.add_argument('--udp', dest='udp', action='store_true', help='If the Packages are UDP')
-parser.add_argument('-b', dest='bandWidthInterval', type=float, help='Set the Bandwidth Interval in sec')
+parser.add_argument('-b', dest='bandWidthInterval', type=float, help='Set the Interval in sec for bits per interval')
 
 args = parser.parse_args()
 
@@ -371,7 +371,7 @@ def pcktInFlyFirstSendUDP():
     fileSaveNameByte = fileName + '_bytes_in_fly.csv'
     fileSaveNameLatency = fileName + '_latency.csv'
     fileSaveNameDroped = fileName + '_droped.csv'
-    fileSaveNameDetails = fileName + ' details.csv'
+    fileSaveNameDetails = fileName + '_details.csv'
 
 
     csvArray = []
@@ -607,7 +607,7 @@ def pcktInFlyFirstSendReverseUDP():
 
 
 def bandwidthUDP():
-    fileSaveNameBandwidth = fileName + '_bandwidth.csv'
+    fileSaveNameBandwidth = fileName + '_bit_per_' + str(bandWidthInterval) + 's.csv'
 
 
     csvArray = []
@@ -650,13 +650,13 @@ def bandwidthUDP():
                 timeStampDest = float(destinationPckt[1]) - startTimeStamp
 
                 if ((timeStampDest - firstInIntervall) < bandWidthInterval):
-                    # die 24 Byte kommen von preamble and inter-packe, die tShark subtrahiert
-                    byteTransfared += float(destinationPckt[8]) + 20
+                    # die 24 Byte kommen von preamble and inter-packe, die tShark substrahiert
+                    byteTransfared += float(destinationPckt[8]) + 24
 
                 else:
                     actualBandwidth = byteTransfared / bandWidthInterval
 
-                    byteString = str(ipId) + "\t" + str(timeCounter) + "\t" + str(actualBandwidth) + "\n"
+                    byteString = str(ipId) + "\t" + str(timeCounter) + "\t" + str(actualBandwidth * 8) + "\n"
 
                     resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
                     resultWriteBandwidth.write(byteString)

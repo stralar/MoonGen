@@ -1,1 +1,11 @@
 hier werde ich ich meine Ergebnisse zeit-chronologisch reinstellen
+10.07.19:
+Name: test0
+Erklärung:
+    Heute werde ich erste einfache Tests mit dem unveränderten Script "examples/l2-forward-psring-hybrid-latency-rate.lua" durchführen.
+    Die RingSize ist auf 280 da im Paper davon ausgegangen wird das die Queue 280 Pakete groß ist.
+    Zudem werde ich dem "executeAll.sh" script "r&c" hinzufügen.
+    "network_analys.py" script angepasst und um den Druchfluss Mbps zu berechen habe ich in der Datei für "_details" die insgesammt erfolgreich,
+    gesendetetn Bytes mal 8 damit es Bits werden und dann durch 2 damit wir Mbps bekommen angepasst. 
+    
+Ergebnis:
