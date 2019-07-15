@@ -8,16 +8,18 @@ import sys
 parser = argparse.ArgumentParser(description='Programm create a PIF list')
 parser.add_argument('-n', '--name', help='Please give a Data path to the csv File')
 
-
 args = parser.parse_args()
 
 fileName = args.name
 
+fileSaveName = fileName[:-1] + "boxplot_summary.csv"
+
 mbits = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
+# Collect Data from files
 result = []
 for i in range(len(mbits)):
-    calData = []
+    calcData = []
 
     filePathDetails = fileName + str(mbits[i]) +"-*_bit_per_1.0s.csv"
 
@@ -28,12 +30,24 @@ for i in range(len(mbits)):
                 csvReader = csv.reader(csvDataFile, delimiter = '\t')
 
                 for row in csvReader:
-                    calData.append(row[2])
+                    calcData.append(row[2])
 
         except():
             print("Unexpected error:", sys.exc_info()[0])
             pass
-    result.append(calData)
+    result.append(calcData)
 
+# write Summary in file
+resultWritePackage = open(fileSaveName, 'w')
+for i in range(len(result[0])):
+    lineString = ""
+    for j in range(len(result)):
+        try:
+            lineString += str(result[j][i]) + "\t"
 
-print(result)
+        except:
+            lineString += "\t"
+    lineString += "\n"
+    resultWritePackage.write(lineString)
+
+resultWritePackage.close()
