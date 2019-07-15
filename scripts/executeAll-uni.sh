@@ -97,7 +97,7 @@ do
 
                 #sleep 5
 
-                ssh $clientPC $helperCommand &
+                ssh $clientPC $dagCommand &
 
                 sleep 2
 
