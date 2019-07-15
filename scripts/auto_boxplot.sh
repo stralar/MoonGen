@@ -14,10 +14,10 @@ for var in "$@"
 do
 
     if [ "$count" -eq 0 ];then
-        plots="$plots '$var' using (1):1, "
+        plots="$plots '$var' using (1):3, "
         count=$(( + 5))
     else
-        plots="$plots '$var' using ($count):1, "
+        plots="$plots '$var' using ($count):3, "
         count=$(($count + 5))
 
     fi
