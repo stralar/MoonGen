@@ -27,7 +27,7 @@ moonGenExecuteTime=$((dagExecuteTime + 5))
 waitTime=$((dagExecuteTime))
 
 # List from Bandwidth length to test
-rateList="1 5 10" # 5 10 15 20 25 30 35"
+rateList="1 10 20" # 5 10 15 20 25 30 35"
  #10 50 100"
 # List from latencies to test
 latencyList="0"
@@ -97,7 +97,7 @@ do
 
                 #sleep 5
 
-                ssh $clientPC $dagCommand &
+                ssh $dagPC $dagCommand &
 
                 sleep 2
 
@@ -110,7 +110,8 @@ do
 
                 #sleep 5
                 #done
-                true $((t++))
+                t=$((t+1))
+                echo $t
             done
         done
     done
