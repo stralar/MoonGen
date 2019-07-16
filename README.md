@@ -10,10 +10,25 @@ In den folgenden Monaten versuche ich die Eigenschaften eines LTE-Netzes in Moon
 - Greedy throughput measurement (Fig 2)
   - Find settings that match Nico Becker's measurements
 - Latency and buffer size (section IV.B, Fig 4)
+  - Latency and buffer size
+  - dormant vs active state
 - Burstiness (Fig 5)
+  - number of packets within inter-packet time interval
+  - losses at connection establishment (DRX?)
+  - frequency of packet loss by packet number (fig 5c)
+  - burstiness of packet losses (fig 5d)
 - TCP measurements (TBD)
 - Discontinuous reception mode (section V.A)
+  - RRC_IDLE, RRC_CONNECTED states
+  - idle cycle length
+  - DRX inactivity timer
+  - Short and long DRX cycle length
+  - RRC connection release
+  - Measure RTT for different inter-packet gaps
 - MAC-layer retransmissions - HARQ
+  - concealed losses
+  - may require an extra queue
+  - Measure RTT of TCP 3-way handshake
 - HTTP and middlebox emulation (TBD)
 
 # IDEE:
