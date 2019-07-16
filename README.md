@@ -7,9 +7,14 @@ In den folgenden Monaten versuche ich die Eigenschaften eines LTE-Netzes in Moon
 
 
 # TODO List:
-- fuer den anfang 35Mbps uplink
-- Uplink Richung
-- Downlink Richtung
+- Greedy throughput measurement (Fig 2)
+  - Find settings that match Nico Becker's measurements
+- Latency and buffer size (section IV.B, Fig 4)
+- Burstiness (Fig 5)
+- TCP measurements (TBD)
+- Discontinuous reception mode (section V.A)
+- MAC-layer retransmissions - HARQ
+- HTTP and middlebox emulation (TBD)
 
 # IDEE:
 - Ich glaube man braucht keine MB/s und rx/tx-queue Parameter mehr da man immer von Theoretischen 50Mbps ausgeht.
