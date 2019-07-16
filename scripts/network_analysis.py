@@ -62,6 +62,8 @@ else:
     # remove the .csv ending
     fileName = fileName[:-4]
 
+print(fileName)
+
 
 # TShark command for TCP packages
 # tshark -r file.erf -T fields -e frame.number -e frame.time_epoch -e erf.flags.cap -e ip.src -e tcp.srcport -e ip.dst -e tcp.dstport -e ip.proto -e tcp.len -e tcp.seq -e tcp.ack > file.csv
@@ -652,7 +654,7 @@ def bandwidthUDP():
 
                 if(i == len(csvArray) - 1):
                     actualBandwidth = byteTransfared / bandWidthInterval
-                    byteString = str(ipId) + "\t" + str(timeCounter - 1 + timeStampDest - firstInIntervall) + "\t" + str(actualBandwidth * 8) + "\n"
+                    byteString = str(ipId) + "\t" + str(timeCounter - 1 + timeStampDest - firstInIntervall) + "\t" + str((actualBandwidth * 8) / (timeStampDest - firstInIntervall)) + "\n"
 
                     resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
                     resultWriteBandwidth.write(byteString)
