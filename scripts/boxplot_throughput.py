@@ -12,7 +12,7 @@ args = parser.parse_args()
 
 fileName = args.name
 
-fileSaveName = fileName[:-1] + "boxplot_summary.csv"
+fileSaveName = fileName[:-1] + "boxplot_throughput.csv"
 
 mbits = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
