@@ -3,10 +3,10 @@
 
 # ssh Key should be used
 # username@hostname
-serverPC="lars@pc1"
-clientPC="lars@pc87"
-moonGenPC="lars@pc86"
-dagPC="stratmann@DAG"
+serverPC="lars@130.75.73.140"
+clientPC="lars@130.75.73.226"
+moonGenPC="lars@130.75.73.225"
+dagPC="stratmann@130.75.73.131"
 
 
 
@@ -27,7 +27,7 @@ moonGenExecuteTime=$((dagExecuteTime + 5))
 waitTime=$((dagExecuteTime))
 
 # List from Bandwidth length to test
-rateList="1 5 10" # 5 10 15 20 25 30 35"
+rateList="1 5 10 15 20 25 30 35 40 45 50"
  #10 50 100"
 # List from latencies to test
 latencyList="0"
@@ -36,7 +36,7 @@ latencyList="0"
 ringSizeList="280"
 
 # number of similar tests
-testNumber=2
+testNumber=10
 
 # List form the MTU that should be tested
 byteSizeListDAG=(1400)
