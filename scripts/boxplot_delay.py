@@ -6,7 +6,7 @@ import sys
 
 
 parser = argparse.ArgumentParser(description='Programm create a PIF list')
-parser.add_argument('-n', '--name', help='Please give a Data path to the csv File')
+parser.add_argument('-n', '--name', help='Please give a Data path to the csv File: rnc-psr-tXX-r')
 
 args = parser.parse_args()
 
