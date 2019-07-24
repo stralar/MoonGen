@@ -5,10 +5,6 @@ numpy
 matplotlib
 python-tk
 
-
-
-TODO boxplot delay
-TODO boxplot throughput
 TODO graph average delay
 
 
