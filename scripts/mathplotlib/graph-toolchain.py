@@ -100,7 +100,7 @@ class BoxplotThroughput():
         ax.set_ybound(0, 50)
 
         # Save the figure
-        fig.savefig("a" + fileName + self.fileSaveName, bbox_inches='tight')
+        fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
 
 class BoxplotDelay():
@@ -170,18 +170,16 @@ class BoxplotDelay():
         ax.set_xticklabels(self.boxLabel)
 
         # Save the figure
-        fig.savefig("a" + fileName + self.fileSaveName, bbox_inches='tight')
+        fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
 
 class AverageDelay():
 
     data = []
+    mean = []
 
     yLabel = "delay [sec]"
     xLabel = "packet nr"
-    boxLabel = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-
-
 
     def __init__(self, mbits):
 
@@ -198,14 +196,25 @@ class AverageDelay():
             #print(file)
             tmpAllData.append(np.loadtxt(file, delimiter="\t"))
 
-        tmpData = []
+        #print(tmpAllData)
+
         for i in range(len(tmpAllData)):
+            tmpData = []
             for j in range(len(tmpAllData[i])):
                 tmpData.append(tmpAllData[i][j][2])
 
-        self.data.append(tmpData)
+            self.data.append(tmpData)
 
-        #print(self.data)
+        #print(len(self.data))
+
+        # calculate the mean
+        for i in range(len(self.data[0])):
+            singleMean = 0
+            for j in range(len(self.data)):
+                singleMean += self.data[j][i]
+                #print(str(singleMean) + " | " + str(singleMean / len(self.data)))
+
+            self.mean.append(singleMean / len(self.data))
 
     def draw_graph(self):
         # Create a figure instance
@@ -213,25 +222,46 @@ class AverageDelay():
         # Create an axes instance
         ax = fig.add_subplot(111)
 
+
+        # draw the original values
+        for i in range(len(self.data)):
+            ax.plot(self.data[i], color="gray")
+
+        # draw the mean Line
+        ax.plot(self.mean, color="blue")
+
+        #ax.set_ylim(bottom=0, top=0.0005)
+        #ax.set_xlim(left=0, right=len(self.data[0]))
+
         ax.set_xlabel(self.xLabel)
         ax.set_ylabel(self.yLabel)
 
-        ax.set_xticklabels(self.boxLabel)
+
+
+        #ax.set_xticklabels(self.boxLabel)
 
         # Save the figure
-        fig.savefig("a" + fileName + self.fileSaveName, bbox_inches='tight')
-
+        fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
 if __name__ == '__main__':
+    '''
+    bt = BoxplotThroughput()
 
-    #bt = BoxplotThroughput()
+    bt.draw_graph()
 
-    #bt.draw_graph()
+    bd = BoxplotDelay()
 
-    #bd = BoxplotDelay()
-
-    #bd.draw_graph()
-
+    bd.draw_graph()
+'''
     ad = AverageDelay(5)
+    ad.draw_graph()
 
+    ad2 = AverageDelay(20)
+    ad2.draw_graph()
+
+    ad3 = AverageDelay(40)
+    ad3.draw_graph()
+
+    ad4 = AverageDelay(50)
+    ad4.draw_graph()
 
