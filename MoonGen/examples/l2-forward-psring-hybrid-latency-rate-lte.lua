@@ -84,31 +84,144 @@ end
 function receive(ring, rxQueue, rxDev)
 	--print("receive thread...")
 
+	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
+	-- RRC_IDLE: sleep state
+	-- RRC_CONNECTED:
+	local rcc_idle = true
+
+	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
+	local short_DRX = true
+
+	local last_monitoring = limiter:get_tsc_cycles()
+	-- between 0.32 and 2.56 sec
+	local rcc_idle_cycle_length = 2
+
+	local short_DRX_cycle_length = 0.3
+	local long_DRX_cycle_length = 0.6
+
+	local active_time = 0.1
+
+	local short_DRX_inactive = true
+	local actual_inactive_short_DRX_cycle = 0
+	local max_inactive_short_DRX_cycle = 5
+
+	local long_DRX_inactive = true
+	local actual_inactive_long_DRX_cycle = 0
+	local max_inactive_long_DRX_cycle = 5
+
+
 	local bufs = memory.createBufArray()
 	local count = 0
 	local count_hist = histogram:new()
 	local ringsize_hist = histogram:new()
 	local ringbytes_hist = histogram:new()
 	while mg.running() do
-		count = rxQueue:recv(bufs)
-		count_hist:update(count)
-		--print("receive thread count="..count)
-		for iix=1,count do
-			local buf = bufs[iix]
-			local ts = limiter:get_tsc_cycles()
-			buf.udata64 = ts
-		end
-		if count > 0 then
-			pipe:sendToPktsizedRing(ring.ring, bufs, count)
-			--print("ring count: ",pipe:countPacketRing(ring.ring))
-			ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+
+		local time_difference = limiter:get_tsc_cycles() - last_monitoring
+
+		-- if the RCC_IDLE mode is active and when the interval T_on is active
+		if rcc_idle and rcc_idle_cycle_length <= time_difference and active_time >= time_difference then
+
+			count = rxQueue:recv(bufs)
+			count_hist:update(count)
+			--print("receive thread count="..count)
+			for iix=1,count do
+				local buf = bufs[iix]
+				local ts = limiter:get_tsc_cycles()
+				buf.udata64 = ts
+			end
+			if count > 0 then
+
+				rcc_idle = false
+
+				pipe:sendToPktsizedRing(ring.ring, bufs, count)
+				--print("ring count: ",pipe:countPacketRing(ring.ring))
+				ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+			end
+
+			-- if the T_on interval is ended
+			if  active_time <= time_difference then
+				last_monitoring = limiter:get_tsc_cycles()
+			end
+
+		-- if RCC_CONNECTED mode is active
+		elseif not rcc_idle then
+
+			-- if the T_on interval is active
+			if short_DRX and short_DRX_cycle_length <= time_difference and active_time >= time_difference then
+
+				count = rxQueue:recv(bufs)
+				count_hist:update(count)
+				--print("receive thread count="..count)
+				for iix=1,count do
+					local buf = bufs[iix]
+					local ts = limiter:get_tsc_cycles()
+					buf.udata64 = ts
+				end
+				if count > 0 then
+
+					short_DRX_inactive = false
+
+					pipe:sendToPktsizedRing(ring.ring, bufs, count)
+					--print("ring count: ",pipe:countPacketRing(ring.ring))
+					ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+
+				end
+
+				-- if the T_on interval is ended
+				if active_time <= time_difference then
+					last_monitoring = limiter:get_tsc_cycles()
+					if short_DRX_inactive then
+						actual_inactive_short_DRX_cycle = actual_inactive_short_DRX_cycle + 1
+					end
+				end
+
+			-- if the T_on interval is active
+			elseif not short_DRX and long_DRX_cycle_length <= time_difference and active_time >= time_difference then
+
+				count = rxQueue:recv(bufs)
+				count_hist:update(count)
+				--print("receive thread count="..count)
+				for iix=1,count do
+					local buf = bufs[iix]
+					local ts = limiter:get_tsc_cycles()
+					buf.udata64 = ts
+				end
+				if count > 0 then
+
+					long_DRX_inactive = false
+
+					pipe:sendToPktsizedRing(ring.ring, bufs, count)
+					--print("ring count: ",pipe:countPacketRing(ring.ring))
+					ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+
+				end
+
+				-- if the T_on interval is ended
+				if active_time <= time_difference then
+					last_monitoring = limiter:get_tsc_cycles()
+					if long_DRX_inactive then
+						actual_inactive_long_DRX_cycle = actual_inactive_long_DRX_cycle + 1
+					end
+				end
+			end
+			if actual_inactive_short_DRX_cycle == max_inactive_short_DRX_cycle then
+				short_DRX = false
+				actual_inactive_short_DRX_cycle = 0
+			end
+
+			if actual_inactive_long_DRX_cycle == max_inactive_long_DRX_cycle then
+				short_DRX = true
+				rcc_idle = true
+				actual_inactive_long_DRX_cycle = 0
+			end
 		end
 	end
 	count_hist:print()
 	count_hist:save("rxq-pkt-count-distribution-histogram-"..rxDev["id"]..".csv")
 	ringsize_hist:print()
 	ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
-end
+	end
 
 function forward(ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
 	print("forward with rate "..rate.." and latency "..latency.." and loss rate "..lossrate.." and clossrate "..clossrate.." and catchuprate "..catchuprate)
@@ -128,6 +241,10 @@ function forward(ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossr
 	-- when there is a concealed loss, the backed-up packets can
 	-- catch-up at line rate
 	local catchup_mode = false
+
+	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
+	-- RRC_IDLE:
+	local rcc_idle = true
 
 
 	while mg.running() do
