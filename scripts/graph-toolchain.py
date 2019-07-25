@@ -5,8 +5,6 @@ numpy
 matplotlib
 python-tk
 
-TODO graph average delay
-
 
 Parameter: dateiname und aktionen/BOOLEAN
 
@@ -14,24 +12,16 @@ mit dem dateinamen werden dann die jeweiligen Files gesucht und in das array gel
 
 '''
 import argparse
-import os
-import csv
 import glob
-import sys
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-
-
-
 parser = argparse.ArgumentParser(description='Programm create a PIF list')
-parser.add_argument('-n', '--name', help='Please give a Data path to the csv File')
+parser.add_argument('-n', '--name', help='Please give a Data path to the csv File, example: rnc-psr-tXX-r')
 
 args = parser.parse_args()
 
 fileName = args.name
-
 
 class BoxplotThroughput():
 
@@ -102,7 +92,6 @@ class BoxplotThroughput():
         # Save the figure
         fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
-
 class BoxplotDelay():
 
     data = []
@@ -172,11 +161,7 @@ class BoxplotDelay():
         # Save the figure
         fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
-
 class AverageDelay():
-
-    data = []
-    mean = []
 
     yLabel = "delay [sec]"
     xLabel = "packet nr"
@@ -185,6 +170,9 @@ class AverageDelay():
 
         self.mbits = mbits
         self.fileSaveName = "-" + str(self.mbits) + "Mbits-average-delay"
+
+        self.data = []
+        self.mean = []
 
 
         # Collect Data from files
@@ -217,31 +205,32 @@ class AverageDelay():
             self.mean.append(singleMean / len(self.data))
 
     def draw_graph(self):
+        #plt.hold(False)
+
         # Create a figure instance
-        fig = plt.figure(len(plt.get_fignums()))
+        plt.figure(self.mbits)
         # Create an axes instance
-        ax = fig.add_subplot(111)
+        #ax = fig.add_subplot(111)
 
 
         # draw the original values
         for i in range(len(self.data)):
-            ax.plot(self.data[i], color="gray")
+            plt.plot(self.data[i], color="gray")
 
         # draw the mean Line
-        ax.plot(self.mean, color="blue")
+        plt.plot(self.mean, color="blue")
 
         #ax.set_ylim(bottom=0, top=0.0005)
         #ax.set_xlim(left=0, right=len(self.data[0]))
 
-        ax.set_xlabel(self.xLabel)
-        ax.set_ylabel(self.yLabel)
-
+        plt.xlabel(self.xLabel)
+        plt.ylabel(self.yLabel)
 
 
         #ax.set_xticklabels(self.boxLabel)
 
         # Save the figure
-        fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
+        plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
 if __name__ == '__main__':
     '''
