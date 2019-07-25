@@ -8,6 +8,7 @@ In den folgenden Monaten versuche ich die Eigenschaften eines LTE-Netzes in Moon
 
 # TODO List:
 - Greedy throughput measurement (Fig 2)
+  - ~~graphic tools createt~~
   - Find settings that match Nico Becker's measurements
 - Latency and buffer size (section IV.B, Fig 4)
   - Latency and buffer size
