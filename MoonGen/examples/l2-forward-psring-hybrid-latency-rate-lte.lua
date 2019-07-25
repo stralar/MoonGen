@@ -85,7 +85,6 @@ function receive(ring, rxQueue, rxDev)
 	--print("receive thread...")
 
     local tsc_hz = libmoon:getCyclesFrequency()
-    local tsc_hz_ms = tsc_hz / 1000
 
 	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
 	-- RRC_IDLE: sleep state
@@ -97,12 +96,12 @@ function receive(ring, rxQueue, rxDev)
 
 	local last_monitoring = limiter:get_tsc_cycles()
 	-- between 0.32 and 2.56 sec
-	local rcc_idle_cycle_length = 2 * tsc_hz_ms
+	local rcc_idle_cycle_length = 2 * tsc_hz
 
-	local short_DRX_cycle_length = 0.3 * tsc_hz_ms
-	local long_DRX_cycle_length = 0.6 * tsc_hz_ms
+	local short_DRX_cycle_length = 0.3 * tsc_hz
+	local long_DRX_cycle_length = 0.6 * tsc_hz
 
-	local active_time = 0.1 * tsc_hz_ms
+	local active_time = 0.1 * tsc_hz
 
 	local short_DRX_inactive = true
 	local actual_inactive_short_DRX_cycle = 0
