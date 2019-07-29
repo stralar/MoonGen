@@ -138,8 +138,8 @@ function receive(ring, rxQueue, rxDev)
 					buf.udata64 = ts
 				end
 				if count > 0 then
-					print("active")
-					--rcc_idle = false
+					print("RCC_IDLE will be deactivate")
+					rcc_idle = false
 
 				    pipe:sendToPktsizedRing(ring.ring, bufs, count)
 				    --print("ring count: ",pipe:countPacketRing(ring.ring))
@@ -147,11 +147,12 @@ function receive(ring, rxQueue, rxDev)
 				end
 			end
 
-			-- T_on is active
+			-- time to wait and in this time all packages will be droped
 			while limiter:get_tsc_cycles() < last_monitoring + rcc_idle_cycle_length do
 				if not mg.running() then
 					return
 				end
+				rxQueue:recv(bufs)
 			end
 			last_monitoring = limiter:get_tsc_cycles()
 
@@ -159,62 +160,85 @@ function receive(ring, rxQueue, rxDev)
 		elseif not rcc_idle then
 
 			-- if the T_on interval is active
-			if short_DRX and short_DRX_cycle_length <= time_difference and active_time >= time_difference then
+			if short_DRX then
 
-				count = rxQueue:recv(bufs)
-				count_hist:update(count)
-				--print("receive thread count="..count)
-				for iix=1,count do
-					local buf = bufs[iix]
-					local ts = limiter:get_tsc_cycles()
-					buf.udata64 = ts
-				end
-				if count > 0 then
+				short_DRX_inactive = true
+				-- T_on is active
+				while limiter:get_tsc_cycles() < last_monitoring + active_time do
+					if not mg.running() then
+						return
+					end
+					count = rxQueue:recv(bufs)
+					count_hist:update(count)
+					--print("receive thread count="..count)
+					for iix=1,count do
+						local buf = bufs[iix]
+						local ts = limiter:get_tsc_cycles()
+						buf.udata64 = ts
+					end
+					if count > 0 then
+						print("short DRX active")
+						short_DRX_inactive = false
 
-					short_DRX_inactive = false
-
-					pipe:sendToPktsizedRing(ring.ring, bufs, count)
-					--print("ring count: ",pipe:countPacketRing(ring.ring))
-					ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
-
-				end
-
-				-- if the T_on interval is ended
-				if active_time <= time_difference then
-					last_monitoring = limiter:get_tsc_cycles()
-					if short_DRX_inactive then
-						actual_inactive_short_DRX_cycle = actual_inactive_short_DRX_cycle + 1
+						pipe:sendToPktsizedRing(ring.ring, bufs, count)
+						--print("ring count: ",pipe:countPacketRing(ring.ring))
+						ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
 					end
 				end
+
+				if short_DRX_inactive then
+					actual_inactive_short_DRX_cycle = actual_inactive_short_DRX_cycle + 1
+				end
+
+				-- time to wait and in this time all packages will be droped
+				while limiter:get_tsc_cycles() < last_monitoring + short_DRX_cycle_length do
+					if not mg.running() then
+						return
+					end
+					rxQueue:recv(bufs)
+				end
+				last_monitoring = limiter:get_tsc_cycles()
 
 			-- if the T_on interval is active
 			elseif not short_DRX and long_DRX_cycle_length <= time_difference and active_time >= time_difference then
 
-				count = rxQueue:recv(bufs)
-				count_hist:update(count)
-				--print("receive thread count="..count)
-				for iix=1,count do
-					local buf = bufs[iix]
-					local ts = limiter:get_tsc_cycles()
-					buf.udata64 = ts
-				end
-				if count > 0 then
+				long_DRX_inactive = true
 
-					long_DRX_inactive = false
+				-- T_on is active
+				while limiter:get_tsc_cycles() < last_monitoring + active_time do
+					if not mg.running() then
+						return
+					end
+					count = rxQueue:recv(bufs)
+					count_hist:update(count)
+					--print("receive thread count="..count)
+					for iix=1,count do
+						local buf = bufs[iix]
+						local ts = limiter:get_tsc_cycles()
+						buf.udata64 = ts
+					end
+					if count > 0 then
+						print("short DRX active")
+						long_DRX_inactive = false
 
-					pipe:sendToPktsizedRing(ring.ring, bufs, count)
-					--print("ring count: ",pipe:countPacketRing(ring.ring))
-					ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
-
-				end
-
-				-- if the T_on interval is ended
-				if active_time <= time_difference then
-					last_monitoring = limiter:get_tsc_cycles()
-					if long_DRX_inactive then
-						actual_inactive_long_DRX_cycle = actual_inactive_long_DRX_cycle + 1
+						pipe:sendToPktsizedRing(ring.ring, bufs, count)
+						--print("ring count: ",pipe:countPacketRing(ring.ring))
+						ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
 					end
 				end
+
+				if long_DRX_inactive then
+					actual_inactive_long_DRX_cycle = actual_inactive_long_DRX_cycle + 1
+				end
+
+				-- time to wait and in this time all packages will be droped
+				while limiter:get_tsc_cycles() < last_monitoring + short_DRX_cycle_length do
+					if not mg.running() then
+						return
+					end
+					rxQueue:recv(bufs)
+				end
+				last_monitoring = limiter:get_tsc_cycles()
 			end
 			if actual_inactive_short_DRX_cycle == max_inactive_short_DRX_cycle then
 				short_DRX = false
