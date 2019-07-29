@@ -146,6 +146,7 @@ function receive(ring, rxQueue, rxDev)
 				if count > 0 then
 					print("RCC_IDLE will be deactivate")
 					rcc_idle = false
+					last_active = limiter:get_tsc_cycles()
 
 				    pipe:sendToPktsizedRing(ring.ring, bufs, count)
 				    --print("ring count: ",pipe:countPacketRing(ring.ring))
