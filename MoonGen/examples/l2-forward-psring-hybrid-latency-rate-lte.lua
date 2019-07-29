@@ -119,8 +119,17 @@ function receive(ring, rxQueue, rxDev)
 	local ringbytes_hist = histogram:new()
 	while mg.running() do
 
-		local time_difference = limiter:get_tsc_cycles() - last_monitoring
+		if limiter:get_tsc_cycles() > max_inactive_short_DRX_cycle * short_DRX_cycle_length + last_monitoring then
+			short_DRX = false
+			print("short DRX deactivate")
+		end
 
+		if not short_DRX and limiter:get_tsc_cycles() > max_inactive_long_DRX_cycle * long_DRX_cycle_length + last_monitoring then
+			rcc_idle = true
+			short_DRX = true
+			print("long DRX deactivate")
+			print("rcc_idle activated")
+		end
 		-- if the RCC_IDLE mode is active and when the interval T_on is active
 		if rcc_idle then
 
@@ -178,16 +187,11 @@ function receive(ring, rxQueue, rxDev)
 					end
 					if count > 0 then
 						print("short DRX active")
-						short_DRX_inactive = false
 
 						pipe:sendToPktsizedRing(ring.ring, bufs, count)
 						--print("ring count: ",pipe:countPacketRing(ring.ring))
 						ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
 					end
-				end
-
-				if short_DRX_inactive then
-					actual_inactive_short_DRX_cycle = actual_inactive_short_DRX_cycle + 1
 				end
 
 				-- time to wait and in this time all packages will be droped
@@ -219,16 +223,11 @@ function receive(ring, rxQueue, rxDev)
 					end
 					if count > 0 then
 						print("long DRX active")
-						long_DRX_inactive = false
 
 						pipe:sendToPktsizedRing(ring.ring, bufs, count)
 						--print("ring count: ",pipe:countPacketRing(ring.ring))
 						ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
 					end
-				end
-
-				if long_DRX_inactive then
-					actual_inactive_long_DRX_cycle = actual_inactive_long_DRX_cycle + 1
 				end
 
 				-- time to wait and in this time all packages will be droped
@@ -239,19 +238,6 @@ function receive(ring, rxQueue, rxDev)
 					rxQueue:recv(bufs)
 				end
 				last_monitoring = limiter:get_tsc_cycles()
-			end
-			if actual_inactive_short_DRX_cycle == max_inactive_short_DRX_cycle then
-				short_DRX = false
-				actual_inactive_short_DRX_cycle = 0
-				print("short DRX deactivate")
-			end
-
-			if actual_inactive_long_DRX_cycle == max_inactive_long_DRX_cycle then
-				short_DRX = true
-				rcc_idle = true
-				actual_inactive_long_DRX_cycle = 0
-				print("long DRX deactivate")
-				print("rcc_idle activated")
 			end
 		end
 	end
