@@ -122,29 +122,38 @@ function receive(ring, rxQueue, rxDev)
 		local time_difference = limiter:get_tsc_cycles() - last_monitoring
 
 		-- if the RCC_IDLE mode is active and when the interval T_on is active
-		if rcc_idle and rcc_idle_cycle_length <= time_difference and active_time >= time_difference then
+		if rcc_idle then
 
-			count = rxQueue:recv(bufs)
-			count_hist:update(count)
-			--print("receive thread count="..count)
-			for iix=1,count do
-				local buf = bufs[iix]
-				local ts = limiter:get_tsc_cycles()
-				buf.udata64 = ts
-			end
-			if count > 0 then
-
-				rcc_idle = false
+			-- T_on is active
+			while limiter:get_tsc_cycles() < last_monitoring + active_time do
+				if not mg.running() then
+					return
+				end
+				count = rxQueue:recv(bufs)
+				count_hist:update(count)
+				--print("receive thread count="..count)
+				for iix=1,count do
+					local buf = bufs[iix]
+					local ts = limiter:get_tsc_cycles()
+					buf.udata64 = ts
+				end
+				if count > 0 then
+					print("active")
+					--rcc_idle = false
 
 				pipe:sendToPktsizedRing(ring.ring, bufs, count)
 				--print("ring count: ",pipe:countPacketRing(ring.ring))
 				ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+				end
 			end
 
-			-- if the T_on interval is ended
-			if  active_time <= time_difference then
-				last_monitoring = limiter:get_tsc_cycles()
+			-- T_on is active
+			while limiter:get_tsc_cycles() < last_monitoring + rcc_idle_cycle_length do
+				if not mg.running() then
+					return
+				end
 			end
+			last_monitoring = limiter:get_tsc_cycles()
 
 		-- if RCC_CONNECTED mode is active
 		elseif not rcc_idle then
