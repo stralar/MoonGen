@@ -218,7 +218,7 @@ function receive(ring, rxQueue, rxDev)
 						buf.udata64 = ts
 					end
 					if count > 0 then
-						print("short DRX active")
+						print("long DRX active")
 						long_DRX_inactive = false
 
 						pipe:sendToPktsizedRing(ring.ring, bufs, count)
@@ -243,12 +243,15 @@ function receive(ring, rxQueue, rxDev)
 			if actual_inactive_short_DRX_cycle == max_inactive_short_DRX_cycle then
 				short_DRX = false
 				actual_inactive_short_DRX_cycle = 0
+				print("short DRX deactivate")
 			end
 
 			if actual_inactive_long_DRX_cycle == max_inactive_long_DRX_cycle then
 				short_DRX = true
 				rcc_idle = true
 				actual_inactive_long_DRX_cycle = 0
+				print("long DRX deactivate")
+				print("rcc_idle activated")
 			end
 		end
 	end
