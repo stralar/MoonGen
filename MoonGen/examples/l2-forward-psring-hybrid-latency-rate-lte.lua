@@ -95,6 +95,7 @@ function receive(ring, rxQueue, rxDev)
 	local short_DRX = true
 
 	local last_monitoring = limiter:get_tsc_cycles()
+	local last_active
 	-- between 0.32 and 2.56 sec
 	local rcc_idle_cycle_length = 2 * tsc_hz
 
@@ -119,7 +120,10 @@ function receive(ring, rxQueue, rxDev)
 	local ringbytes_hist = histogram:new()
 	while mg.running() do
 
-		if limiter:get_tsc_cycles() > max_inactive_short_DRX_cycle * short_DRX_cycle_length + last_monitoring then
+		print(limiter:get_tsc_cycles())
+		print(max_inactive_short_DRX_cycle * short_DRX_cycle_length + last_monitoring)
+
+		if not rcc_idle and limiter:get_tsc_cycles() > max_inactive_short_DRX_cycle * short_DRX_cycle_length + last_monitoring then
 			short_DRX = false
 			print("short DRX deactivate")
 		end
@@ -149,6 +153,7 @@ function receive(ring, rxQueue, rxDev)
 				if count > 0 then
 					print("RCC_IDLE will be deactivate")
 					rcc_idle = false
+					last_active = limiter:get_tsc_cycles()
 
 				    pipe:sendToPktsizedRing(ring.ring, bufs, count)
 				    --print("ring count: ",pipe:countPacketRing(ring.ring))
@@ -187,10 +192,12 @@ function receive(ring, rxQueue, rxDev)
 					end
 					if count > 0 then
 						print("short DRX active")
+						last_active = limiter:get_tsc_cycles()
 
 						pipe:sendToPktsizedRing(ring.ring, bufs, count)
 						--print("ring count: ",pipe:countPacketRing(ring.ring))
 						ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+
 					end
 				end
 
@@ -223,6 +230,7 @@ function receive(ring, rxQueue, rxDev)
 					end
 					if count > 0 then
 						print("long DRX active")
+						last_active = limiter:get_tsc_cycles()
 
 						pipe:sendToPktsizedRing(ring.ring, bufs, count)
 						--print("ring count: ",pipe:countPacketRing(ring.ring))
