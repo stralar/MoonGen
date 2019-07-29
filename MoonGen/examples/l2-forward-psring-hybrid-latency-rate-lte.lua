@@ -141,9 +141,9 @@ function receive(ring, rxQueue, rxDev)
 					print("active")
 					--rcc_idle = false
 
-				pipe:sendToPktsizedRing(ring.ring, bufs, count)
-				--print("ring count: ",pipe:countPacketRing(ring.ring))
-				ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+				    pipe:sendToPktsizedRing(ring.ring, bufs, count)
+				    --print("ring count: ",pipe:countPacketRing(ring.ring))
+				    ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
 				end
 			end
 
