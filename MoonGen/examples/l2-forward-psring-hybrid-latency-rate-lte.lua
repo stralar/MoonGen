@@ -200,7 +200,7 @@ function receive(ring, rxQueue, rxDev)
 				last_monitoring = limiter:get_tsc_cycles()
 
 			-- if the T_on interval is active
-			elseif not short_DRX and long_DRX_cycle_length <= time_difference and active_time >= time_difference then
+			elseif not short_DRX then
 
 				long_DRX_inactive = true
 
