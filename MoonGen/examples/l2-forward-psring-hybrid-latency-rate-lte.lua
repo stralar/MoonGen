@@ -12,6 +12,10 @@ local histogram = require "histogram"
 
 local PKT_SIZE	= 60
 
+-- Test metaphors
+-- Idee ist das
+local metaphor = {false, false}
+
 function configure(parser)
 	parser:description("Forward traffic between interfaces with moongen rate control")
 	parser:option("-d --dev", "Devices to use, specify the same device twice to echo packets."):args(2):convert(tonumber)
@@ -63,9 +67,9 @@ function master(args)
 
 	-- start the forwarding tasks
 	for i = 1, args.threads do
-		mg.startTask("forward", ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1])
+		mg.startTask("forward", i, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1])
 		if args.dev[1] ~= args.dev[2] then
-			mg.startTask("forward", ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2])
+			mg.startTask("forward", i, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2])
 		end
 	end
 
@@ -110,7 +114,7 @@ function receive(ring, rxQueue, rxDev)
 	ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
 end
 
-function forward(ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
+function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate, threadNumber)
 	print("forward with rate "..rate.." and latency "..latency.." and loss rate "..lossrate.." and clossrate "..clossrate.." and catchuprate "..catchuprate)
 	local numThreads = 1
 	
@@ -120,6 +124,8 @@ function forward(ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossr
 	local tsc_hz = libmoon:getCyclesFrequency()
 	local tsc_hz_ms = tsc_hz / 1000
 	print("tsc_hz = "..tsc_hz)
+
+	print(threadNumber)
 
 	-- larger batch size is useful when sending it through a rate limiter
 	local bufs = memory.createBufArray()  --memory:bufArray()  --(128)
