@@ -16,6 +16,8 @@ In den folgenden Monaten versuche ich die Eigenschaften eines LTE-Netzes in Moon
 - Burstiness (Fig 5)
   - number of packets within inter-packet time interval
   - losses at connection establishment (DRX?)
+    - 4 Modes: idle, short, long, continuous
+    - metaphors between the Threads
   - frequency of packet loss by packet number (fig 5c)
   - burstiness of packet losses (fig 5d)
 - TCP measurements (TBD)
