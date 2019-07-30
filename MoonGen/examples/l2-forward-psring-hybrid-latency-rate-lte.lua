@@ -84,169 +84,31 @@ end
 function receive(ring, rxQueue, rxDev)
 	--print("receive thread...")
 
-    local tsc_hz = libmoon:getCyclesFrequency()
-
-	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
-	-- RRC_IDLE: sleep state
-	-- RRC_CONNECTED:
-	local rcc_idle = true
-
-	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
-	local short_DRX = true
-
-	local last_monitoring = limiter:get_tsc_cycles()
-	local last_active = limiter:get_tsc_cycles()
-	-- between 0.32 and 2.56 sec
-	local rcc_idle_cycle_length = 2 * tsc_hz
-
-	local short_DRX_cycle_length = 0.3 * tsc_hz
-	local long_DRX_cycle_length = 0.6 * tsc_hz
-
-	local active_time = 0.1 * tsc_hz
-
-	local short_DRX_inactive = true
-	local max_inactive_short_DRX_cycle = 20
-
-	local long_DRX_inactive = true
-	local max_inactive_long_DRX_cycle = 20
-
-
 	local bufs = memory.createBufArray()
 	local count = 0
 	local count_hist = histogram:new()
 	local ringsize_hist = histogram:new()
 	local ringbytes_hist = histogram:new()
 	while mg.running() do
-
-		if not rcc_idle and limiter:get_tsc_cycles() > max_inactive_short_DRX_cycle * short_DRX_cycle_length + last_active then
-			short_DRX = false
-			print("short DRX deactivate")
-		elseif not short_DRX and limiter:get_tsc_cycles() > max_inactive_long_DRX_cycle * long_DRX_cycle_length + max_inactive_short_DRX_cycle * short_DRX_cycle_length + last_active then
-			rcc_idle = true
-			short_DRX = true
-			print("long DRX deactivate")
-			print("rcc_idle activated")
+		count = rxQueue:recv(bufs)
+		count_hist:update(count)
+		--print("receive thread count="..count)
+		for iix=1,count do
+			local buf = bufs[iix]
+			local ts = limiter:get_tsc_cycles()
+			buf.udata64 = ts
 		end
-		-- if the RCC_IDLE mode is active and when the interval T_on is active
-		if rcc_idle then
-
-			-- T_on is active
-			while limiter:get_tsc_cycles() < last_monitoring + active_time do
-				if not mg.running() then
-					return
-				end
-				count = rxQueue:recv(bufs)
-				count_hist:update(count)
-				--print("receive thread count="..count)
-				for iix=1,count do
-					local buf = bufs[iix]
-					local ts = limiter:get_tsc_cycles()
-					buf.udata64 = ts
-				end
-				if count > 0 then
-					print("RCC_IDLE will be deactivate")
-					rcc_idle = false
-					last_active = limiter:get_tsc_cycles()
-
-				    pipe:sendToPktsizedRing(ring.ring, bufs, count)
-				    --print("ring count: ",pipe:countPacketRing(ring.ring))
-				    ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
-				end
-			end
-
-			-- time to wait and in this time all packages will be droped
-			while limiter:get_tsc_cycles() < last_monitoring + rcc_idle_cycle_length do
-				if not mg.running() then
-					return
-				end
-				rxQueue:recv(bufs)
-			end
-			last_monitoring = limiter:get_tsc_cycles()
-
-		-- if RCC_CONNECTED mode is active
-		elseif not rcc_idle then
-
-			-- if the T_on interval is active
-			if short_DRX then
-
-				short_DRX_inactive = true
-				-- T_on is active
-				while limiter:get_tsc_cycles() < last_monitoring + active_time do
-					if not mg.running() then
-						return
-					end
-					count = rxQueue:recv(bufs)
-					count_hist:update(count)
-					--print("receive thread count="..count)
-					for iix=1,count do
-						local buf = bufs[iix]
-						local ts = limiter:get_tsc_cycles()
-						buf.udata64 = ts
-					end
-					if count > 0 then
-						print("short DRX active")
-						last_active = limiter:get_tsc_cycles()
-
-						pipe:sendToPktsizedRing(ring.ring, bufs, count)
-						--print("ring count: ",pipe:countPacketRing(ring.ring))
-						ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
-
-					end
-				end
-
-				-- time to wait and in this time all packages will be droped
-				while limiter:get_tsc_cycles() < last_monitoring + short_DRX_cycle_length do
-					if not mg.running() then
-						return
-					end
-					rxQueue:recv(bufs)
-				end
-				last_monitoring = limiter:get_tsc_cycles()
-
-			-- if the T_on interval is active
-			elseif not short_DRX then
-
-				long_DRX_inactive = true
-
-				-- T_on is active
-				while limiter:get_tsc_cycles() < last_monitoring + active_time do
-					if not mg.running() then
-						return
-					end
-					count = rxQueue:recv(bufs)
-					count_hist:update(count)
-					--print("receive thread count="..count)
-					for iix=1,count do
-						local buf = bufs[iix]
-						local ts = limiter:get_tsc_cycles()
-						buf.udata64 = ts
-					end
-					if count > 0 then
-						print("long DRX active")
-						last_active = limiter:get_tsc_cycles()
-
-						pipe:sendToPktsizedRing(ring.ring, bufs, count)
-						--print("ring count: ",pipe:countPacketRing(ring.ring))
-						ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
-					end
-				end
-
-				-- time to wait and in this time all packages will be droped
-				while limiter:get_tsc_cycles() < last_monitoring + short_DRX_cycle_length do
-					if not mg.running() then
-						return
-					end
-					rxQueue:recv(bufs)
-				end
-				last_monitoring = limiter:get_tsc_cycles()
-			end
+		if count > 0 then
+			pipe:sendToPktsizedRing(ring.ring, bufs, count)
+			--print("ring count: ",pipe:countPacketRing(ring.ring))
+			ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
 		end
 	end
 	count_hist:print()
 	count_hist:save("rxq-pkt-count-distribution-histogram-"..rxDev["id"]..".csv")
 	ringsize_hist:print()
 	ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
-	end
+end
 
 function forward(ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
 	print("forward with rate "..rate.." and latency "..latency.." and loss rate "..lossrate.." and clossrate "..clossrate.." and catchuprate "..catchuprate)
@@ -267,12 +129,183 @@ function forward(ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossr
 	-- catch-up at line rate
 	local catchup_mode = false
 
+
+	local tsc_hz = libmoon:getCyclesFrequency()
+
 	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
-	-- RRC_IDLE:
+	-- RRC_IDLE: sleep state
+	-- RRC_CONNECTED:
 	local rcc_idle = true
 
+	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
+	local short_DRX = true
+
+	local continuous_reception = false
+
+	local last_activity = limiter:get_tsc_cycles()
+
+	-- between 0.32 and 2.56 sec
+	local rcc_idle_cycle_length = 2 * tsc_hz
+
+	local short_DRX_cycle_length = 0.3 * tsc_hz
+	local long_DRX_cycle_length = 0.6 * tsc_hz
+
+	local active_time = 0.1 * tsc_hz
+
+	local actual_inactive_short_DRX_cyle = 0
+	local max_inactive_short_DRX_cycle = 20
+
+	local actual_inactive_long_DRX_cyle = 0
+	local max_inactive_long_DRX_cycle = 20
+
+	-- will be reset after each send/received package
+	-- timer is between 1ms - 2.56sec Paper-[10]
+	local DRX_inactivity_timer = 2 * tsc_hz
 
 	while mg.running() do
+
+		-- if the continuous_reception mode is active
+		if continuous_reception then
+
+			count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
+
+			for iix=1,count do
+				local buf = bufs[iix]
+
+				-- get the buf's arrival timestamp and compare to current time
+				--local arrival_timestamp = buf:getTimestamp()
+				local arrival_timestamp = buf.udata64
+
+				local send_time = arrival_timestamp + (((1)*latency) * tsc_hz_ms)
+				local cur_time = limiter:get_tsc_cycles()
+				--print("timestamps", arrival_timestamp, send_time, cur_time)
+				-- spin/wait until it is time to send this frame
+				-- this assumes frame order is preserved
+				while limiter:get_tsc_cycles() < send_time do
+					if not mg.running() then
+						return
+					end
+				end
+
+				local pktSize = buf.pkt_len + 24
+
+				buf:setDelay((pktSize) * (linkspeed/rate - 1))
+
+			end
+
+			if count > 0 then
+				-- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
+				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
+				--print("sendWithDelay() returned")
+				last_activity = limiter:get_tsc_cycles()
+			end
+
+			if limiter:get_tsc_cycles() > last_activity + DRX_inactivity_timer then
+				print("continuous_reception deactivating")
+				continuous_reception = false
+
+				print("short_DRX activating")
+				short_DRX = true
+			end
+
+		-- if the RCC_IDLE mode is active and when the interval T_on is active
+		elseif rcc_idle then
+			last_activity = limiter:get_tsc_cycles()
+			-- T_on is active
+			while limiter:get_tsc_cycles() < last_activity + active_time do
+				if not mg.running() then
+					return
+				end
+				count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
+				if count > 0 then
+					print("rcc_idle deactivating")
+					rcc_idle = false
+
+					print("continuous_reception activating")
+					continuous_reception = true
+					break
+				end
+			end
+
+			-- time to wait and in this time all packages will be droped
+			while not continuous_reception and rcc_idle and limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length do
+				if not mg.running() then
+					return
+				end
+			end
+
+		-- if RCC_CONNECTED mode is active
+		else
+			if short_DRX then
+				last_activity = limiter:get_tsc_cycles()
+				-- T_on is active
+				while limiter:get_tsc_cycles() < last_activity + active_time do
+					if not mg.running() then
+						return
+					end
+					count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
+					if count > 0 then
+						print("short_DRX deactivating")
+						-- rcc_idle = false
+
+						print("continuous_reception activating")
+						continuous_reception = true
+						break
+					end
+					actual_inactive_short_DRX_cyle = actual_inactive_short_DRX_cyle + 1
+				end
+
+				-- time to wait and in this time all packages will be droped
+				while not continuous_reception and limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length do
+					if not mg.running() then
+						return
+					end
+				end
+				if actual_inactive_short_DRX_cyle == max_inactive_short_DRX_cycle then
+					print("short_DRX deactivating")
+					actual_inactive_short_DRX_cyle = 0
+					short_DRX = false
+
+					print("long_DRX activating")
+				end
+			else
+				last_activity = limiter:get_tsc_cycles()
+				-- T_on is active
+				while limiter:get_tsc_cycles() < last_activity + active_time do
+					if not mg.running() then
+						return
+					end
+					count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
+					if count > 0 then
+						print("long_DRX deactivating")
+						short_DRX = true
+
+						print("continuous_reception activating")
+						continuous_reception = true
+						break
+					end
+					actual_inactive_long_DRX_cyle = actual_inactive_long_DRX_cyle + 1
+
+				end
+
+				-- time to wait and in this time all packages will be droped
+				while not continuous_reception and limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length do
+					if not mg.running() then
+						return
+					end
+				end
+
+				if actual_inactive_long_DRX_cyle == max_inactive_long_DRX_cycle then
+					print("long_DRX deactivating")
+					actual_inactive_long_DRX_cyle = 0
+					short_DRX = true
+
+					print("rcc_idle activating")
+					rcc_idle = true
+				end
+			end
+		end
+--[[
 		-- receive one or more packets from the queue
 		--local count = rxQueue:recv(bufs)
 		--print("calling pipe:recvFromPktsizedRing(ring.ring, bufs)")
@@ -280,7 +313,7 @@ function forward(ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossr
 		--print("call returned.")
 		for iix=1,count do
 			local buf = bufs[iix]
-			
+
 			-- get the buf's arrival timestamp and compare to current time
 			--local arrival_timestamp = buf:getTimestamp()
 			local arrival_timestamp = buf.udata64
@@ -320,16 +353,14 @@ function forward(ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossr
 
 		--print("count="..tostring(count))
 
-		--if count > 0 then
 		if count > 0 then
 			-- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
 			txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
 			--print("sendWithDelay() returned")
 		end
+]]
 	end
 end
-
-
 
 
 
