@@ -1,1 +1,17 @@
 Hier werde ich gruende und aenderungen an MoonGen hinnein schreiben
+
+
+30.07.19
+Die Cyclen habe ich aus "receive" zu "forward" verlegt, weil wir einfach immer alles annemen wollen
+und dann erst entscheiden was mit den Packages gemacht werden soll.
+
+31.07.19
+Versuch die beiden "forward" Threads zu synchronisieren, jedoch gibt es scheinbar in lua selbst keine moeglichkeiten
+dafuer, somit muss ich mit den globalen Variablen arbeiten.
+Ansaetze:
+    semaphore
+    mutex
+
+01.08.19
+Ich habe in libmoon "lock.lua" gefunden, funktioniert leider nicht so wie erhoft, weil wenn ich die
+initialisierte Variable mit "var:lock()" und bei erneuten aufruf sperrt sich der thread nicht.

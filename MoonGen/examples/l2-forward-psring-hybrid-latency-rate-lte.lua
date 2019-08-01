@@ -10,11 +10,17 @@ local ffi     = require "ffi"
 local libmoon = require "libmoon"
 local histogram = require "histogram"
 
+
 local PKT_SIZE	= 60
 
 -- Test metaphors
 -- Idee ist das
-local metaphor = {false, false}
+wait_metaphor = { true, true}
+local semaphore = 0
+
+local last_activity
+
+
 
 function configure(parser)
 	parser:description("Forward traffic between interfaces with moongen rate control")
@@ -67,9 +73,9 @@ function master(args)
 
 	-- start the forwarding tasks
 	for i = 1, args.threads do
-		mg.startTask("forward", i, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1])
+		mg.startTask("forward", 1, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1])
 		if args.dev[1] ~= args.dev[2] then
-			mg.startTask("forward", i, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2])
+			mg.startTask("forward", 2, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2])
 		end
 	end
 
@@ -114,7 +120,7 @@ function receive(ring, rxQueue, rxDev)
 	ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
 end
 
-function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate, threadNumber)
+function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
 	print("forward with rate "..rate.." and latency "..latency.." and loss rate "..lossrate.." and clossrate "..clossrate.." and catchuprate "..catchuprate)
 	local numThreads = 1
 	
@@ -125,7 +131,7 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 	local tsc_hz_ms = tsc_hz / 1000
 	print("tsc_hz = "..tsc_hz)
 
-	print(threadNumber)
+	print("Thread: "..threadNumber)
 
 	-- larger batch size is useful when sending it through a rate limiter
 	local bufs = memory.createBufArray()  --memory:bufArray()  --(128)
@@ -148,7 +154,9 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 
 	local continuous_reception = false
 
-	local last_activity = limiter:get_tsc_cycles()
+	--local last_activity = limiter:get_tsc_cycles()
+	last_activity = limiter:get_tsc_cycles()
+	--if threadNumber == 1 then last_activity = limiter:get_tsc_cycles() end
 
 	-- between 0.32 and 2.56 sec
 	local rcc_idle_cycle_length = 2 * tsc_hz
@@ -200,10 +208,18 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 			end
 
 			if count > 0 then
+
+				print("thread "..threadNumber)
+				print(wait_metaphor[1])
+
+
 				-- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
 				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
 				--print("sendWithDelay() returned")
-				last_activity = limiter:get_tsc_cycles()
+				if true then last_activity = limiter:get_tsc_cycles() end
+				--last_activity = limiter:get_tsc_cycles()
+
+
 			end
 
 			if limiter:get_tsc_cycles() > last_activity + DRX_inactivity_timer then
@@ -214,25 +230,49 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 				short_DRX = true
 			end
 
+
 		-- if the RCC_IDLE mode is active and when the interval T_on is active
 		elseif rcc_idle then
-			last_activity = limiter:get_tsc_cycles()
+			if true then last_activity = limiter:get_tsc_cycles() end
+			--last_activity = limiter:get_tsc_cycles()
+			print("thread "..threadNumber)
+			print(wait_metaphor[1])
+			wait_metaphor[1] = false
+			print(limiter:get_tsc_cycles())
+
+
 			-- T_on is active
 			while limiter:get_tsc_cycles() < last_activity + active_time do
 				if not mg.running() then
 					return
 				end
 				count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
+
+
+
 				if count > 0 then
-					print("rcc_idle deactivating")
+
+					--[[
+					lock1.tryLock(0)
+					semaphore = semaphore + 1
+					lock1.unlock()
+					while semaphore ~= 2 do
+						if not mg.running() then
+							return
+						end
+						print("wait "..threadNumber.." semaphore: "..semaphore)
+
+					end
+					semaphore = semaphore -1
+]]
+					print("rcc_idle deactivating "..threadNumber)
 					rcc_idle = false
 
-					print("continuous_reception activating")
+					print("continuous_reception activating "..threadNumber)
 					continuous_reception = true
 					break
 				end
 			end
-
 			-- time to wait and in this time all packages will be droped
 			while not continuous_reception and rcc_idle and limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length do
 				if not mg.running() then
@@ -240,10 +280,13 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 				end
 			end
 
-		-- if RCC_CONNECTED mode is active
+
+			-- if RCC_CONNECTED mode is active
 		else
 			if short_DRX then
-				last_activity = limiter:get_tsc_cycles()
+				if threadNumber == 1 then last_activity = limiter:get_tsc_cycles() end
+				--last_activity = limiter:get_tsc_cycles()
+
 				-- T_on is active
 				while limiter:get_tsc_cycles() < last_activity + active_time do
 					if not mg.running() then
@@ -275,7 +318,10 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 					print("long_DRX activating")
 				end
 			else
-				last_activity = limiter:get_tsc_cycles()
+				if threadNumber == 1 then last_activity = limiter:get_tsc_cycles() end
+				--last_activity = limiter:get_tsc_cycles()
+
+
 				-- T_on is active
 				while limiter:get_tsc_cycles() < last_activity + active_time do
 					if not mg.running() then
