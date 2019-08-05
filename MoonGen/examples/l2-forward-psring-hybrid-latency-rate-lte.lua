@@ -10,7 +10,6 @@ local ffi     = require "ffi"
 local libmoon = require "libmoon"
 local histogram = require "histogram"
 
-
 local PKT_SIZE	= 60
 
 
@@ -23,9 +22,6 @@ local last_activity = limiter:get_tsc_cycles()
 
 local skip = true
 
-local rcc_idle = true
-local short_DRX = true
-local continuous_reception = false
 
 
 function configure(parser)
@@ -147,18 +143,17 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 	-- catch-up at line rate
 	local catchup_mode = false
 
-
 	local tsc_hz = libmoon:getCyclesFrequency()
 
 	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
 	-- RRC_IDLE: sleep state
 	-- RRC_CONNECTED:
-	--local rcc_idle = true
+	local rcc_idle = true
 
 	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
-	--local short_DRX = true
+	local short_DRX = true
 
-	--local continuous_reception = false
+	local continuous_reception = false
 
 	--local last_activity = limiter:get_tsc_cycles()
 	-- last_activity = limiter:get_tsc_cycles()
@@ -172,11 +167,11 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 
 	local active_time = 0.1 * tsc_hz
 
-	local actual_inactive_short_DRX_cyle = 0
-	local max_inactive_short_DRX_cycle = 20
+	local actual_inactive_short_DRX_cycle = 0
+	local max_inactive_short_DRX_cycle = 10
 
-	local actual_inactive_long_DRX_cyle = 0
-	local max_inactive_long_DRX_cycle = 20
+	local actual_inactive_long_DRX_cycle = 0
+	local max_inactive_long_DRX_cycle = 10
 
 	-- will be reset after each send/received package
 	-- timer is between 1ms - 2.56sec Paper-[10]
@@ -185,10 +180,9 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 	while mg.running() do
 
 		if true then
-
 			-- if the continuous_reception mode is active
-			if wait_metaphor[2] then
-
+			-- if wait_metaphor[2] then
+			if continuous_reception then
 				count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
 
 				for iix=1,count do
@@ -232,8 +226,8 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 
 				if limiter:get_tsc_cycles() > last_activity + DRX_inactivity_timer then
 					print("continuous_reception deactivating")
-					--continuous_reception = false
-					wait_metaphor[2] = false
+					continuous_reception = false
+					--wait_metaphor[2] = false
 
 					print("short_DRX activating")
 					short_DRX = true
@@ -241,7 +235,8 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 
 
 				-- if the RCC_IDLE mode is active and when the interval T_on is active
-			elseif wait_metaphor[1] then
+			elseif rcc_idle then
+			--elseif wait_metaphor[1] then
 				--if true then last_activity = limiter:get_tsc_cycles() end
 				last_activity = limiter:get_tsc_cycles()
 
@@ -257,12 +252,12 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 					if count > 0 then
 
 						print("rcc_idle deactivating "..threadNumber)
-						--rcc_idle = false
-						wait_metaphor[1] = false
+						rcc_idle = false
+						-- wait_metaphor[1] = false
 
 						print("continuous_reception activating "..threadNumber)
-						--continuous_reception = true
-						wait_metaphor[2] = true
+						continuous_reception = true
+						-- wait_metaphor[2] = true
 						break
 					end
 				end
@@ -288,14 +283,14 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 						count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
 						if count > 0 then
 							print("short_DRX deactivating")
-							-- rcc_idle = false
+							rcc_idle = false
 
 							print("continuous_reception activating")
 							continuous_reception = true
 							break
 						end
-						actual_inactive_short_DRX_cyle = actual_inactive_short_DRX_cyle + 1
 					end
+					actual_inactive_short_DRX_cycle = actual_inactive_short_DRX_cycle + 1
 
 					-- time to wait and in this time all packages will be droped
 					while not continuous_reception and limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length do
@@ -303,9 +298,9 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 							return
 						end
 					end
-					if actual_inactive_short_DRX_cyle == max_inactive_short_DRX_cycle then
+					if actual_inactive_short_DRX_cycle == max_inactive_short_DRX_cycle then
 						print("short_DRX deactivating")
-						actual_inactive_short_DRX_cyle = 0
+						actual_inactive_short_DRX_cycle = 0
 						short_DRX = false
 
 						print("long_DRX activating")
@@ -313,7 +308,6 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 				else
 					--if threadNumber == 1 then last_activity = limiter:get_tsc_cycles() end
 					last_activity = limiter:get_tsc_cycles()
-
 
 					-- T_on is active
 					while limiter:get_tsc_cycles() < last_activity + active_time do
@@ -329,9 +323,9 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 							continuous_reception = true
 							break
 						end
-						actual_inactive_long_DRX_cyle = actual_inactive_long_DRX_cyle + 1
-
 					end
+					actual_inactive_long_DRX_cycle = actual_inactive_long_DRX_cycle + 1
+
 
 					-- time to wait and in this time all packages will be droped
 					while not continuous_reception and limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length do
@@ -340,9 +334,9 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 						end
 					end
 
-					if actual_inactive_long_DRX_cyle == max_inactive_long_DRX_cycle then
+					if actual_inactive_long_DRX_cycle == max_inactive_long_DRX_cycle then
 						print("long_DRX deactivating")
-						actual_inactive_long_DRX_cyle = 0
+						actual_inactive_long_DRX_cycle = 0
 						short_DRX = true
 
 						print("rcc_idle activating")
@@ -350,60 +344,60 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 					end
 				end
 			end
-			--[[
-                    -- receive one or more packets from the queue
-                    --local count = rxQueue:recv(bufs)
-                    --print("calling pipe:recvFromPktsizedRing(ring.ring, bufs)")
-                    count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
-                    --print("call returned.")
-                    for iix=1,count do
-                        local buf = bufs[iix]
+				--[[
+                        -- receive one or more packets from the queue
+                        --local count = rxQueue:recv(bufs)
+                        --print("calling pipe:recvFromPktsizedRing(ring.ring, bufs)")
+                        count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
+                        --print("call returned.")
+                        for iix=1,count do
+                            local buf = bufs[iix]
 
-                        -- get the buf's arrival timestamp and compare to current time
-                        --local arrival_timestamp = buf:getTimestamp()
-                        local arrival_timestamp = buf.udata64
-                        local extraDelay = 0.0
-                        if (xlatency > 0) then
-                            extraDelay = -math.log(math.random())*xlatency
-                        end
-                        -- emulate concealed losses
-                        local closses = 0
-                        while (math.random() < clossrate) do
-                            closses = closses + 1
-                            if (catchuprate > 0) then
-                                catchup_mode = true
-                                --print "entering catchup mode!"
+                            -- get the buf's arrival timestamp and compare to current time
+                            --local arrival_timestamp = buf:getTimestamp()
+                            local arrival_timestamp = buf.udata64
+                            local extraDelay = 0.0
+                            if (xlatency > 0) then
+                                extraDelay = -math.log(math.random())*xlatency
+                            end
+                            -- emulate concealed losses
+                            local closses = 0
+                            while (math.random() < clossrate) do
+                                closses = closses + 1
+                                if (catchuprate > 0) then
+                                    catchup_mode = true
+                                    --print "entering catchup mode!"
+                                end
+                            end
+                            local send_time = arrival_timestamp + (((closses+1)*latency + extraDelay) * tsc_hz_ms)
+                            local cur_time = limiter:get_tsc_cycles()
+                            --print("timestamps", arrival_timestamp, send_time, cur_time)
+                            -- spin/wait until it is time to send this frame
+                            -- this assumes frame order is preserved
+                            while limiter:get_tsc_cycles() < send_time do
+                                catchup_mode = false
+                                if not mg.running() then
+                                    return
+                                end
+                            end
+
+                            local pktSize = buf.pkt_len + 24
+                            if (catchup_mode) then
+                                --print "operating in catchup mode!"
+                                buf:setDelay((pktSize) * (linkspeed/catchuprate - 1))
+                            else
+                                buf:setDelay((pktSize) * (linkspeed/rate - 1))
                             end
                         end
-                        local send_time = arrival_timestamp + (((closses+1)*latency + extraDelay) * tsc_hz_ms)
-                        local cur_time = limiter:get_tsc_cycles()
-                        --print("timestamps", arrival_timestamp, send_time, cur_time)
-                        -- spin/wait until it is time to send this frame
-                        -- this assumes frame order is preserved
-                        while limiter:get_tsc_cycles() < send_time do
-                            catchup_mode = false
-                            if not mg.running() then
-                                return
-                            end
+
+                        --print("count="..tostring(count))
+
+                        if count > 0 then
+                            -- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
+                            txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
+                            --print("sendWithDelay() returned")
                         end
-
-                        local pktSize = buf.pkt_len + 24
-                        if (catchup_mode) then
-                            --print "operating in catchup mode!"
-                            buf:setDelay((pktSize) * (linkspeed/catchuprate - 1))
-                        else
-                            buf:setDelay((pktSize) * (linkspeed/rate - 1))
-                        end
-                    end
-
-                    --print("count="..tostring(count))
-
-                    if count > 0 then
-                        -- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
-                        txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
-                        --print("sendWithDelay() returned")
-                    end
-            ]]
+                ]]
 
 		end
 	end
