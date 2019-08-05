@@ -233,7 +233,7 @@ class AverageDelay():
         plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
 if __name__ == '__main__':
-    '''
+
     bt = BoxplotThroughput()
 
     bt.draw_graph()
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     bd = BoxplotDelay()
 
     bd.draw_graph()
-'''
+
     ad = AverageDelay(5)
     ad.draw_graph()
 

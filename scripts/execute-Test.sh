@@ -17,7 +17,7 @@ destInterface="3"
 destIPAdress="10.1.3.2"
 
 moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-lte.lua"
-testName="rnc-psr-t01-"
+testName="rnc-psr-t02-"
 #testName="iperf-psr-t01-"
 
 iperfExecuteTime="2"
