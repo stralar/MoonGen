@@ -10,6 +10,11 @@ local ffi     = require "ffi"
 local libmoon = require "libmoon"
 local histogram = require "histogram"
 
+local namespaces = require "namespaces"
+
+
+
+
 local PKT_SIZE	= 60
 
 
@@ -73,11 +78,14 @@ function master(args)
 	local ring1 = pipe:newPktsizedRing(qdepth1)
 	local ring2 = pipe:newPktsizedRing(qdepth2)
 
+	local ns = namespaces:get()
+
+
 	-- start the forwarding tasks
 	for i = 1, args.threads do
-		mg.startTask("forward", 1, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1])
+		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1])
 		if args.dev[1] ~= args.dev[2] then
-			mg.startTask("forward", 2, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2])
+			mg.startTask("forward", 2, ns, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2])
 		end
 	end
 
@@ -122,7 +130,7 @@ function receive(ring, rxQueue, rxDev)
 	ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
 end
 
-function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
+function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
 	print("forward with rate "..rate.." and latency "..latency.." and loss rate "..lossrate.." and clossrate "..clossrate.." and catchuprate "..catchuprate)
 	local numThreads = 1
 	
@@ -135,7 +143,14 @@ function forward(threadNumber, ring, txQueue, txDev, rate, latency, xlatency, lo
 
 	print("Thread: "..threadNumber)
 
-	-- larger batch size is useful when sending it through a rate limiter
+	if threadNumber == 1 then
+		ns.rcc_idle = true
+		ns.short_DRX = true
+		ns.continuous_reception = false
+	end
+
+
+	-- larger batch size is useful when sending it through a rate limi ter
 	local bufs = memory.createBufArray()  --memory:bufArray()  --(128)
 	local count = 0
 
