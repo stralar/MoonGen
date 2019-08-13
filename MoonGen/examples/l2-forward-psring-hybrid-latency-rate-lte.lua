@@ -12,21 +12,7 @@ local histogram = require "histogram"
 
 local namespaces = require "namespaces"
 
-
-
-
 local PKT_SIZE	= 60
-
-
--- Test metaphors
--- Idee ist das
-wait_metaphor = { true, false}
-local semaphore = 0
-
-local last_activity = limiter:get_tsc_cycles()
-
-local skip = true
-
 
 
 function configure(parser)
@@ -143,8 +129,12 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 	print("Thread: "..threadNumber)
 
-
+	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
+	-- RRC_IDLE: sleep state
+	-- RRC_CONNECTED:
 	ns.rcc_idle = true
+
+	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
 	ns.short_DRX = true
 	ns.continuous_reception = false
 	ns.continuous_reception_active = false
@@ -162,19 +152,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local bufs = memory.createBufArray()  --memory:bufArray()  --(128)
 	local count = 0
 
+
 	-- when there is a concealed loss, the backed-up packets can
 	-- catch-up at line rate
 	local catchup_mode = false
-
-	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
-	-- RRC_IDLE: sleep state
-	-- RRC_CONNECTED:
-	local rcc_idle = true
-
-	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
-	local short_DRX = true
-
-	local continuous_reception = false
 
 	local last_activity = limiter:get_tsc_cycles()
 
@@ -186,16 +167,13 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 	local active_time = 0.1 * tsc_hz
 
-	local actual_inactive_short_DRX_cycle = 0
 	local max_inactive_short_DRX_cycle = 10
 
-	local actual_inactive_long_DRX_cycle = 0
 	local max_inactive_long_DRX_cycle = 10
 
 	-- will be reset after each send/received package
 	-- timer is between 1ms - 2.56sec Paper-[10]
 	local continuous_reception_inactivity_timer = 2 * tsc_hz
-
 
 	-- 16 to 19 signalling messages
 	local rcc_connection_build_delay = 0.1 * tsc_hz
@@ -228,24 +206,41 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				-- get the buf's arrival timestamp and compare to current time
 				--local arrival_timestamp = buf:getTimestamp()
 				local arrival_timestamp = buf.udata64
+				local extraDelay = 0.0
+				if (xlatency > 0) then
+					extraDelay = -math.log(math.random())*xlatency
+				end
 
-				local send_time = arrival_timestamp + (((1)*latency) * tsc_hz_ms)
+				-- emulate concealed losses
+				local closses = 0
+				while (math.random() < clossrate) do
+					closses = closses + 1
+					if (catchuprate > 0) then
+						catchup_mode = true
+						--print "entering catchup mode!"
+					end
+				end
+				local send_time = arrival_timestamp + (((closses+1)*latency + extraDelay) * tsc_hz_ms)
 				local cur_time = limiter:get_tsc_cycles()
 				--print("timestamps", arrival_timestamp, send_time, cur_time)
 				-- spin/wait until it is time to send this frame
 				-- this assumes frame order is preserved
 				while limiter:get_tsc_cycles() < send_time do
+					catchup_mode = false
 					if not mg.running() then
 						return
 					end
 				end
 
-
 				local pktSize = buf.pkt_len + 24
-
-				buf:setDelay((pktSize) * (linkspeed/rate - 1))
-
+				if (catchup_mode) then
+					--print "operating in catchup mode!"
+					buf:setDelay((pktSize) * (linkspeed/catchuprate - 1))
+				else
+					buf:setDelay((pktSize) * (linkspeed/rate - 1))
+				end
 			end
+
 			if count > 0 then
 
 				-- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
