@@ -15,6 +15,8 @@ import argparse
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
+from operator import itemgetter
+
 
 parser = argparse.ArgumentParser(description='Programm create a PIF list')
 parser.add_argument('-n', '--name', help='Please give a Data path to the csv File, example: rnc-psr-tXX-r')
@@ -199,7 +201,10 @@ class AverageDelay():
         for i in range(len(self.data[0])):
             singleMean = 0
             for j in range(len(self.data)):
-                singleMean += self.data[j][i]
+                try:
+                    singleMean += self.data[j][i]
+                except:
+                    singleMean += 0
                 #print(str(singleMean) + " | " + str(singleMean / len(self.data)))
 
             self.mean.append(singleMean / len(self.data))
@@ -232,8 +237,93 @@ class AverageDelay():
         # Save the figure
         plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
-if __name__ == '__main__':
+class LossFrequency():
+    yLabel = "loss frequency"
+    xLabel = "packet nr"
 
+    def __init__(self, mbits):
+
+        self.mbits = mbits
+        self.fileSaveName = "-" + str(self.mbits) + "Mbits-loss-frequency-delay"
+
+        self.data = []
+        self.mean = []
+
+        # Collect Data from pkts in fly files
+
+        filePathDetails = fileName + str(self.mbits) + "-*_pkts_in_fly.csv"
+
+        for file in sorted(glob.glob(filePathDetails)):
+            self.data.append(np.loadtxt(file, delimiter="\t"))
+
+
+        # Collect Data from dropped pckts files
+        filePathDetails = fileName + str(self.mbits) + "-*_droped.csv"
+        dataCount = 0
+
+
+        for file in sorted(glob.glob(filePathDetails)):
+
+            for row in np.loadtxt(file, delimiter="\t"):
+                # mark the dropped Packages
+                row[2] = -1
+                self.data[dataCount] = np.append(self.data[0], row).reshape((-1,3))
+
+            # Sort the data after the timecode
+            self.data[dataCount] = sorted(self.data[0], key=itemgetter(1))
+
+            dataCount += 1
+
+        # Sort the data after the timecode
+        #self.data[0] = np.sort(self.data[0].view('float, float, float'), axis=1).view(np.float)
+
+
+        #for row in self.data[0]:
+            #print(row)
+
+        # calculate the mean
+
+        for i in range(len(self.data[0])):
+            singleMean = 0
+            for j in range(len(self.data)):
+                try:
+                    if(self.data[j][i][2] == -1):
+                        singleMean += 1
+                except:
+                    singleMean += 0
+
+            self.mean.append(singleMean)
+
+        print(self.mean)
+
+    def draw_graph(self):
+        # plt.hold(False)
+
+        # Create a figure instance
+        plt.figure(self.mbits)
+        # Create an axes instance
+        # ax = fig.add_subplot(111)
+
+        # draw the original values
+        #for i in range(len(self.data)):
+        #    plt.plot(self.data[i], color="gray")
+
+        # draw the mean Line
+        plt.plot(self.mean, color="blue")
+
+        # ax.set_ylim(bottom=0, top=0.0005)
+        # ax.set_xlim(left=0, right=len(self.data[0]))
+
+        plt.xlabel(self.xLabel)
+        plt.ylabel(self.yLabel)
+
+        # ax.set_xticklabels(self.boxLabel)
+
+        # Save the figure
+        plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
+
+
+if __name__ == '__main__':
     bt = BoxplotThroughput()
 
     bt.draw_graph()
@@ -254,3 +344,8 @@ if __name__ == '__main__':
     ad4 = AverageDelay(50)
     ad4.draw_graph()
 
+    lf = LossFrequency(40)
+    lf.draw_graph()
+
+    lf = LossFrequency(50)
+    lf.draw_graph()
