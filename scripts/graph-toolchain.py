@@ -274,15 +274,7 @@ class LossFrequency():
 
             dataCount += 1
 
-        # Sort the data after the timecode
-        #self.data[0] = np.sort(self.data[0].view('float, float, float'), axis=1).view(np.float)
-
-
-        #for row in self.data[0]:
-            #print(row)
-
         # calculate the mean
-
         for i in range(len(self.data[0])):
             singleMean = 0
             for j in range(len(self.data)):
@@ -294,7 +286,6 @@ class LossFrequency():
 
             self.mean.append(singleMean)
 
-        print(self.mean)
 
     def draw_graph(self):
         # plt.hold(False)
@@ -303,10 +294,6 @@ class LossFrequency():
         plt.figure(self.mbits)
         # Create an axes instance
         # ax = fig.add_subplot(111)
-
-        # draw the original values
-        #for i in range(len(self.data)):
-        #    plt.plot(self.data[i], color="gray")
 
         # draw the mean Line
         plt.plot(self.mean, color="blue")
