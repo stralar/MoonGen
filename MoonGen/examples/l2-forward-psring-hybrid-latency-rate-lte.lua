@@ -160,16 +160,16 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local last_activity = limiter:get_tsc_cycles()
 
 	-- between 0.32 and 2.56 sec
-	local rcc_idle_cycle_length = 2 * tsc_hz
+	local rcc_idle_cycle_length = 1 * tsc_hz
 
 	local short_DRX_cycle_length = 0.3 * tsc_hz
 	local long_DRX_cycle_length = 0.6 * tsc_hz
 
 	local active_time = 0.1 * tsc_hz
 
-	local max_inactive_short_DRX_cycle = 10
+	local max_inactive_short_DRX_cycle = 3
 
-	local max_inactive_long_DRX_cycle = 10
+	local max_inactive_long_DRX_cycle = 2
 
 	-- will be reset after each send/received package
 	-- timer is between 1ms - 2.56sec Paper-[10]
