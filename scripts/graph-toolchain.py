@@ -85,6 +85,8 @@ class BoxplotThroughput():
         for flier in bp['fliers']:
             flier.set(marker='+', color='red')
 
+        ax.grid(axis='y', ls=':', color='gray')
+
         ax.set_xlabel(self.xLabel)
         ax.set_ylabel(self.yLabel)
 
@@ -158,6 +160,8 @@ class BoxplotDelay():
         ax.set_xlabel(self.xLabel)
         ax.set_ylabel(self.yLabel)
 
+        ax.grid(axis='y', ls=':', color='gray')
+
         ax.set_xticklabels(self.boxLabel)
 
         # Save the figure
@@ -215,8 +219,6 @@ class AverageDelay():
         # Create a figure instance
         plt.figure(self.mbits)
         # Create an axes instance
-        #ax = fig.add_subplot(111)
-
 
         # draw the original values
         for i in range(len(self.data)):
@@ -225,14 +227,15 @@ class AverageDelay():
         # draw the mean Line
         plt.plot(self.mean, color="blue")
 
-        #ax.set_ylim(bottom=0, top=0.0005)
-        #ax.set_xlim(left=0, right=len(self.data[0]))
+        # draw a line on the highest mean
+        plt.axhline(max(self.mean), ls="--", color="black")
+
+        plt.xlim(left=0)
 
         plt.xlabel(self.xLabel)
         plt.ylabel(self.yLabel)
 
-
-        #ax.set_xticklabels(self.boxLabel)
+        plt.grid(ls=':', color='gray')
 
         # Save the figure
         plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
@@ -304,7 +307,7 @@ class LossFrequency():
         plt.xlabel(self.xLabel)
         plt.ylabel(self.yLabel)
 
-        # ax.set_xticklabels(self.boxLabel)
+        plt.grid(ls=':', color='gray')
 
         # Save the figure
         plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
@@ -318,7 +321,6 @@ if __name__ == '__main__':
     bd = BoxplotDelay()
 
     bd.draw_graph()
-
     ad = AverageDelay(5)
     ad.draw_graph()
 
