@@ -178,6 +178,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- 16 to 19 signalling messages
 	local rcc_connection_build_delay = 0.1 * tsc_hz
 
+	local concealed_resend_time = 8
+
 	while mg.running() do
 
 		-- RCC_IDLE to RCC_CONNECTED the delay
@@ -220,7 +222,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 						--print "entering catchup mode!"
 					end
 				end
-				local send_time = arrival_timestamp + (((closses+1)*latency + extraDelay) * tsc_hz_ms)
+				-- TODO compare the timestamp if its lower than the give latency add some latency, so we can manage different MBit rates
+				-- TODO because by higher rates a Latency will be create automatly because they are stuck in the Queue
+				local send_time = arrival_timestamp + (((closses+1)*concealed_resend_time + extraDelay) * tsc_hz_ms)
 				local cur_time = limiter:get_tsc_cycles()
 				--print("timestamps", arrival_timestamp, send_time, cur_time)
 				-- spin/wait until it is time to send this frame
