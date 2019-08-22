@@ -17,7 +17,7 @@ destInterface="3"
 destIPAdress="10.1.3.2"
 
 moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-lte.lua"
-testName="rnc-psr-t04-"
+testName="rnc-psr-t06-"
 #testName="iperf-psr-t01-"
 
 iperfExecuteTime="2"
@@ -56,7 +56,7 @@ ssh $clientPC 'sudo killall rude' &
 sleep 1
 
 
-moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l 25 25 -q 280 280 -c 0.2 0.2 -u 120 120"
+moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l 25 25 -q 280 280 -c 0.05 0.05 -u 40 40"
 moonGenTerminateCommand="sudo killall MoonGen"
 
 ssh $moonGenPC $moonGenMainCommand &

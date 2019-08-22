@@ -96,6 +96,8 @@ class BoxplotThroughput():
         # Save the figure
         fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
+        fig.clear()
+
 class BoxplotDelay():
 
     data = []
@@ -167,6 +169,8 @@ class BoxplotDelay():
         # Save the figure
         fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
+        fig.clear()
+
 class AverageDelay():
 
     yLabel = "delay [sec]"
@@ -186,16 +190,17 @@ class AverageDelay():
         tmpAllData = []
         filePathDetails = fileName + str(self.mbits) + "-*_latency.csv"
 
-        for file in glob.glob(filePathDetails):
-            #print(file)
+        for file in sorted(glob.glob(filePathDetails)):
+
             tmpAllData.append(np.loadtxt(file, delimiter="\t"))
 
-        #print(tmpAllData)
+
 
         for i in range(len(tmpAllData)):
             tmpData = []
             for j in range(len(tmpAllData[i])):
-                tmpData.append(tmpAllData[i][j][2])
+                tmpData.append([tmpAllData[i][j][0] - tmpAllData[i][0][0], tmpAllData[i][j][2]])
+                #tmpData.append(tmpAllData[i][j][2])
 
             self.data.append(tmpData)
 
@@ -206,12 +211,14 @@ class AverageDelay():
             singleMean = 0
             for j in range(len(self.data)):
                 try:
-                    singleMean += self.data[j][i]
+                    singleMean += self.data[j][i][1]
                 except:
                     singleMean += 0
                 #print(str(singleMean) + " | " + str(singleMean / len(self.data)))
 
-            self.mean.append(singleMean / len(self.data))
+            self.mean.append([self.data[0][i][0], singleMean / len(self.data)])
+
+
 
     def draw_graph(self):
         #plt.hold(False)
@@ -222,13 +229,24 @@ class AverageDelay():
 
         # draw the original values
         for i in range(len(self.data)):
-            plt.plot(self.data[i], color="gray")
+            x = []
+            y = []
+            for j in range(len(self.data[i])):
+                x.append(self.data[i][j][0])
+                y.append(self.data[i][j][1])
+            plt.plot(x, y, color="gray")
 
         # draw the mean Line
-        plt.plot(self.mean, color="blue")
+        x = []
+        y = []
+        for i in range(len(self.mean)):
+            x.append(self.mean[i][0])
+            y.append(self.mean[i][1])
+
+        plt.plot(x, y, color="blue")
 
         # draw a line on the highest mean
-        plt.axhline(max(self.mean), ls="--", color="black")
+        plt.axhline(max(y), ls="--", color="black")
 
         plt.xlim(left=0)
 
@@ -239,6 +257,8 @@ class AverageDelay():
 
         # Save the figure
         plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
+
+        plt.close()
 
 class LossFrequency():
     yLabel = "loss frequency"
@@ -312,8 +332,80 @@ class LossFrequency():
         # Save the figure
         plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
 
+        plt.close()
+
+class LossFrequency2():
+    yLabel = "loss frequency"
+    xLabel = "packet nr"
+
+    def __init__(self, mbits):
+
+        self.mbits = mbits
+        self.fileSaveName = "-" + str(self.mbits) + "Mbits-loss-frequency2-delay"
+
+        self.data = []
+        self.mean = []
+        self.losses = []
+
+
+        # Collect Data from files
+
+        tmpAllData = []
+        filePathDetails = fileName + str(self.mbits) + "-*_latency.csv"
+
+        for file in sorted(glob.glob(filePathDetails)):
+            #print(file)
+            tmpAllData.append(np.loadtxt(file, delimiter="\t"))
+
+        for i in range(len(tmpAllData)):
+            tmpData = []
+            for j in range(len(tmpAllData[i])):
+                tmpData.append(tmpAllData[i][j][2])
+
+            self.data.append(tmpData)
+
+        # calculate the mean delay for the hole time
+        for delay in self.data:
+            self.mean.append(np.mean(delay))
+
+
+        for i in range(len(self.data[0])):
+            losses = 0
+            for j in range(len(self.data)):
+                try:
+                    if(self.data[j][i] > self.mean[j]):
+                        losses += 1
+                except:
+                    pass
+            self.losses.append(losses)
+
+    def draw_graph(self):
+        # plt.hold(False)
+
+        # Create a figure instance
+        plt.figure(self.mbits)
+        # Create an axes instance
+        # ax = fig.add_subplot(111)
+
+        # draw the mean Line
+        plt.plot(self.losses, color="blue")
+
+        # ax.set_ylim(bottom=0, top=0.0005)
+        # ax.set_xlim(left=0, right=len(self.data[0]))
+
+        plt.xlabel(self.xLabel)
+        plt.ylabel(self.yLabel)
+
+        plt.grid(ls=':', color='gray')
+
+        # Save the figure
+        plt.savefig(fileName + self.fileSaveName, bbox_inches='tight')
+
+        plt.close()
+
 
 if __name__ == '__main__':
+    '''
     bt = BoxplotThroughput()
 
     bt.draw_graph()
@@ -338,3 +430,10 @@ if __name__ == '__main__':
 
     lf = LossFrequency(50)
     lf.draw_graph()
+
+    lf2 = LossFrequency2(40)
+    lf2.draw_graph()
+
+    lf2 = LossFrequency2(50)
+    lf2.draw_graph()
+    '''
