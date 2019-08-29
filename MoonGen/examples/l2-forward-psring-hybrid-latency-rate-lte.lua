@@ -160,23 +160,23 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local last_activity = limiter:get_tsc_cycles()
 
 	-- between 0.32 and 2.56 sec
-	local rcc_idle_cycle_length = 1 * tsc_hz
+	local rcc_idle_cycle_length = 0.05 * tsc_hz
 
-	local short_DRX_cycle_length = 0.3 * tsc_hz
-	local long_DRX_cycle_length = 0.6 * tsc_hz
+	local short_DRX_cycle_length = 0.015 * tsc_hz
+	local long_DRX_cycle_length = 0.02 * tsc_hz
 
-	local active_time = 0.1 * tsc_hz
+	local active_time = 0.05 * tsc_hz
 
-	local max_inactive_short_DRX_cycle = 3
+	local max_inactive_short_DRX_cycle = 160
 
-	local max_inactive_long_DRX_cycle = 2
+	local max_inactive_long_DRX_cycle = 520
 
 	-- will be reset after each send/received package
 	-- timer is between 1ms - 2.56sec Paper-[10]
-	local continuous_reception_inactivity_timer = 2 * tsc_hz
+	local continuous_reception_inactivity_timer = 0.15 * tsc_hz
 
 	-- 16 to 19 signalling messages
-	local rcc_connection_build_delay = 0.1 * tsc_hz
+	local rcc_connection_build_delay = 0.05 * tsc_hz
 
 	local concealed_resend_time = 8
 
