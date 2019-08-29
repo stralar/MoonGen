@@ -20,10 +20,13 @@ from operator import itemgetter
 
 parser = argparse.ArgumentParser(description='Programm create a PIF list')
 parser.add_argument('-n', '--name', help='Please give a Data path to the csv File, example: rnc-psr-tXX-r')
+parser.add_argument('-p', '--ping', help='Please give a Data path to the csv File, example: ping-psr-tXX')
+
 
 args = parser.parse_args()
 
 fileName = args.name
+fileNamePing = args.ping
 
 class BoxplotThroughput():
 
@@ -403,6 +406,75 @@ class LossFrequency2():
 
         plt.close()
 
+class CCDF():
+    yLabel = "CCDF"
+    xLabel = "RTT [s]"
+
+    def __init__(self):
+
+
+        self.fileSaveName = "-ccdf"
+
+        self.data = []
+        self.sum = []
+        self.cdf = []
+        self.ccdf = []
+
+        # Collect Data from pings
+
+        filePathDetails = fileNamePing + "*.csv"
+
+        for file in sorted(glob.glob(filePathDetails)):
+            print(file)
+            self.data.append(np.loadtxt(file, delimiter="\t"))
+
+        #print(self.data)
+
+        # calculate cdf values
+
+        for val in self.data:
+            tmpSum = float(val.sum())
+            self.sum.append(tmpSum)
+            self.cdf.append(val.cumsum(0) / tmpSum)
+
+            # calculate ccdf values
+            self.ccdf.append(1 - (val.cumsum(0) / tmpSum))
+
+        print(len(self.ccdf))
+
+
+    def draw_graph(self):
+
+        for i in range(len(self.cdf)):
+            plt.plot(self.data[i], self.cdf[i], 'bo')
+
+        plt.xscale('log')
+
+        plt.ylim([0,1])
+        plt.ylabel('CDF')
+        plt.xlabel('RTT [s]')
+
+        plt.savefig(fileNamePing + "-cdf")
+
+        plt.close()
+
+
+        for i in range(len(self.ccdf)):
+            plt.plot(self.data[i], self.ccdf[i], 'bo')
+
+        plt.yscale('log')
+        plt.xscale('log')
+
+
+        plt.ylabel('CCDF')
+        plt.xlabel('RTT [s]')
+
+        plt.savefig(fileNamePing + self.fileSaveName)
+
+        plt.close()
+
+
+
 
 if __name__ == '__main__':
     '''
@@ -437,3 +509,7 @@ if __name__ == '__main__':
     lf2 = LossFrequency2(50)
     lf2.draw_graph()
     '''
+
+    p = CCDF()
+    p.draw_graph()
+
