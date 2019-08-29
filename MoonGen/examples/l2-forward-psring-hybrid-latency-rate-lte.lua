@@ -165,7 +165,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local short_DRX_cycle_length = 0.015 * tsc_hz
 	local long_DRX_cycle_length = 0.02 * tsc_hz
 
-	local active_time = 0.05 * tsc_hz
+	local active_time = 0.01 * tsc_hz
 
 	local max_inactive_short_DRX_cycle = 160
 
@@ -173,7 +173,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 	-- will be reset after each send/received package
 	-- timer is between 1ms - 2.56sec Paper-[10]
-	local continuous_reception_inactivity_timer = 0.15 * tsc_hz
+	local continuous_reception_inactivity_timer = 0.2 * tsc_hz
 
 	-- 16 to 19 signalling messages
 	local rcc_connection_build_delay = 0.05 * tsc_hz
@@ -276,7 +276,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				print("continuous_reception deactivate "..threadNumber)
 			end
 
-		-- if the RCC_IDLE mode is active and when the interval T_on is active
+		-- if the RCC_IDLE mode is active
 		elseif ns.rcc_idle then
 			last_activity = limiter:get_tsc_cycles()
 
