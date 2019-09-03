@@ -51,7 +51,12 @@ function namespace:__index(key)
 		return C.namespace_get_lock(self)
 	end
 	local val = C.namespace_retrieve(self, key)
-	return val ~= nil and loadstring(ffi.string(val))() or nil
+	local bool1 = val ~= nil
+	local bool2 = val ~= nil and loadstring(ffi.string(val))()
+
+	return bool2 or nil
+
+	--return val ~= nil and loadstring(ffi.string(val))() or nil
 end
 
 --- Store a value in the namespace.
