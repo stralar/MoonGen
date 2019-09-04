@@ -1,7 +1,7 @@
 dep_rte_reciprocal.o = \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_sched/rte_reciprocal.c \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_sched/rte_reciprocal.c \
  /usr/include/stdc-predef.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
  /usr/include/stdio.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -18,7 +18,7 @@ dep_rte_reciprocal.o = \
  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
  /usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_common.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_common.h \
  /usr/include/stdlib.h /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h /usr/include/endian.h \
  /usr/include/x86_64-linux-gnu/bits/endian.h \
@@ -45,4 +45,4 @@ dep_rte_reciprocal.o = \
  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
  /usr/include/linux/limits.h \
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_sched/rte_reciprocal.h
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_sched/rte_reciprocal.h

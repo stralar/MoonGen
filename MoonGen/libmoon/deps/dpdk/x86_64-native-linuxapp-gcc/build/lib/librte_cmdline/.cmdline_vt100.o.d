@@ -1,7 +1,7 @@
 dep_cmdline_vt100.o = \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_vt100.c \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_vt100.c \
  /usr/include/stdc-predef.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
  /usr/include/stdlib.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -39,4 +39,4 @@ dep_cmdline_vt100.o = \
  /usr/include/x86_64-linux-gnu/bits/string3.h /usr/include/ctype.h \
  /usr/include/termios.h /usr/include/x86_64-linux-gnu/bits/termios.h \
  /usr/include/x86_64-linux-gnu/sys/ttydefaults.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_vt100.h
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_vt100.h

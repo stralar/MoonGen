@@ -1,7 +1,7 @@
 dep_eal_common_string_fns.o = \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_eal/common/eal_common_string_fns.c \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_eal/common/eal_common_string_fns.c \
  /usr/include/stdc-predef.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
  /usr/include/string.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -25,4 +25,4 @@ dep_eal_common_string_fns.o = \
  /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
  /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_string_fns.h
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_string_fns.h

@@ -1,7 +1,7 @@
 dep_cmdline.o = \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline.c \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_cmdline/cmdline.c \
  /usr/include/stdc-predef.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
  /usr/include/stdio.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -65,11 +65,11 @@ dep_cmdline.o = \
  /usr/include/asm-generic/sockios.h \
  /usr/include/x86_64-linux-gnu/bits/socket2.h \
  /usr/include/x86_64-linux-gnu/bits/in.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_string_fns.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_parse.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_rdline.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_cirbuf.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_vt100.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_rdline.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_parse.h
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_string_fns.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_parse.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_rdline.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/cmdline_cirbuf.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/cmdline_vt100.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_cmdline/cmdline.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/cmdline_rdline.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/cmdline_parse.h

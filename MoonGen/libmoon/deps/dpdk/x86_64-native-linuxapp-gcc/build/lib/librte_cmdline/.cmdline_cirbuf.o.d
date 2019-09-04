@@ -1,7 +1,7 @@
 dep_cmdline_cirbuf.o = \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_cirbuf.c \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_cirbuf.c \
  /usr/include/stdc-predef.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
  /usr/include/string.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -25,4 +25,4 @@ dep_cmdline_cirbuf.o = \
  /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
  /usr/include/x86_64-linux-gnu/bits/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
- /users/brenton/MoonGen.master/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_cirbuf.h
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_cmdline/cmdline_cirbuf.h

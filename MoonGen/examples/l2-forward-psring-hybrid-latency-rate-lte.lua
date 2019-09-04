@@ -162,7 +162,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- between 0.32 and 2.56 sec
 	local rcc_idle_cycle_length = 0.05 * tsc_hz
 
-	local short_DRX_cycle_length = 0.05 * tsc_hz
+	local short_DRX_cycle_length = 0.1 * tsc_hz
 	local long_DRX_cycle_length = 0.04 * tsc_hz
 
 	local active_time = 0.01 * tsc_hz
@@ -343,7 +343,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 					count = pipe:countPktsizedRing(ring.ring)
 
 					if count > 0 then
-						print("short_DRX deactivating "..threadNumber.." pckt: "..pipe:countPktsizedRing(ring.ring))
+						print("short_DRX deactivating "..threadNumber)
 						ns.short_DRX = false
 
 						print("continuous_reception activating "..threadNumber)
