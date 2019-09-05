@@ -160,16 +160,16 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local last_activity = limiter:get_tsc_cycles()
 
 	-- between 0.32 and 2.56 sec
-	local rcc_idle_cycle_length = 0.05 * tsc_hz
+	local rcc_idle_cycle_length = 0.1 * tsc_hz
 
-	local short_DRX_cycle_length = 0.1 * tsc_hz
-	local long_DRX_cycle_length = 0.04 * tsc_hz
+	local short_DRX_cycle_length = 0.015 * tsc_hz
+	local long_DRX_cycle_length = 0.02 * tsc_hz
 
-	local active_time = 0.01 * tsc_hz
+	local active_time = 0.005 * tsc_hz
 
-	local max_inactive_short_DRX_cycle = 160
+	local max_inactive_short_DRX_cycle = 140
 
-	local max_inactive_long_DRX_cycle = 520
+	local max_inactive_long_DRX_cycle = 400
 
 	-- will be reset after each send/received package
 	-- timer is between 1ms - 2.56sec Paper-[10]
@@ -178,6 +178,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- 16 to 19 signalling messages
 	local rcc_connection_build_delay = 0.05 * tsc_hz
 
+	-- in ms
 	local concealed_resend_time = 8
 
 	while mg.running() do
@@ -214,7 +215,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 
 				-- emulate concealed losses
-				local closses = 0
+				local closses = 0.0
 				while (math.random() < clossrate) do
 					closses = closses + 1
 					if (catchuprate > 0) then
@@ -224,8 +225,13 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 				-- TODO compare the timestamp if its lower than the give latency add some latency, so we can manage different MBit rates
 				-- TODO because by higher rates a Latency will be create automatly because they are stuck in the Queue
-				-- local send_time = arrival_timestamp + (((closses+1)*concealed_resend_time + extraDelay) * tsc_hz_ms)
-				local send_time = arrival_timestamp + (((closses+1)*latency + extraDelay) * tsc_hz_ms)
+				local send_time = arrival_timestamp
+				if (closses > 0) then
+					send_time = send_time + (((closses+1)*concealed_resend_time + latency + extraDelay) * tsc_hz_ms)
+				else
+					send_time = send_time + ((latency + extraDelay) * tsc_hz_ms)
+				end
+
 				local cur_time = limiter:get_tsc_cycles()
 				--print("timestamps", arrival_timestamp, send_time, cur_time)
 				-- spin/wait until it is time to send this frame
@@ -280,9 +286,16 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 		-- if the RCC_IDLE mode is active
 		elseif ns.rcc_idle then
 			last_activity = limiter:get_tsc_cycles()
+	
+			-- time to wait
+			while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length - active_time do
+				if not mg.running() then
+					return
+				end
+			end
 
 			-- T_on is active
-			while limiter:get_tsc_cycles() < last_activity + active_time do
+			while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length do
 				if not mg.running() then
 					return
 				end
@@ -306,13 +319,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 			end
 
-			-- time to wait and in this time all packages will be droped
-			-- TODO maybe need to add pipe:recvFromPktsizedRing(ring.ring, bufs, 1) for drop the packages
-			while not ns.continuous_reception and ns.rcc_idle and limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length do
-				if not mg.running() then
-					return
-				end
-			end
+
+
 
 			-- DEBUG
 			if not ns.rcc_idle and ns.continuous_reception and debug then
@@ -327,15 +335,14 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				-- time to wait
 				-- TODO maybe need to add pipe:recvFromPktsizedRing(ring.ring, bufs, 1) for drop the packages
-				while true and not ns.continuous_reception and limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length do
+				while limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length - active_time do
 					if not mg.running() then
 						return
 					end
 				end
-				last_activity = limiter:get_tsc_cycles()
 
 				-- T_on is active
-				while limiter:get_tsc_cycles() < last_activity + active_time do
+				while limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length do
 					if not mg.running() then
 						return
 					end
@@ -356,10 +363,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 					end
 				end
 
-				if threadNumber == 1 then
+				if not ns.continuous_reception and threadNumber == 1 then
 					ns.inactive_short_DRX_cycle =  {ns.inactive_short_DRX_cycle[1] + 1, ns.inactive_short_DRX_cycle[2]}
 				end
-				if threadNumber == 2 then
+				if not ns.continuous_reception and threadNumber == 2 then
 					ns.inactive_short_DRX_cycle =  {ns.inactive_short_DRX_cycle[1], ns.inactive_short_DRX_cycle[2] + 1}
 				end
 
@@ -384,8 +391,15 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			else
 				last_activity = limiter:get_tsc_cycles()
 
+				-- time to wait
+				while not ns.continuous_reception and limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length - active_time do
+					if not mg.running() then
+						return
+					end
+				end
+
 				-- T_on is active
-				while limiter:get_tsc_cycles() < last_activity + active_time do
+				while limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length do
 					if not mg.running() then
 						return
 					end
@@ -406,19 +420,14 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 					end
 				end
 
-				if threadNumber == 1 then
+				if not ns.continuous_reception and threadNumber == 1 then
 					ns.inactive_long_DRX_cycle =  {ns.inactive_long_DRX_cycle[1] + 1, ns.inactive_long_DRX_cycle[2]}
 				end
-				if threadNumber == 2 then
+				if not ns.continuous_reception and threadNumber == 2 then
 					ns.inactive_long_DRX_cycle =  {ns.inactive_long_DRX_cycle[1], ns.inactive_long_DRX_cycle[2] + 1}
 				end
 
-				-- time to wait and in this time all packages will be droped
-				while not ns.continuous_reception and limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length do
-					if not mg.running() then
-						return
-					end
-				end
+
 
 				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
 				-- TODO maybe need to add pipe:recvFromPktsizedRing(ring.ring, bufs, 1) for drop the packages
