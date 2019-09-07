@@ -1,18 +1,21 @@
 #!/bin/bash
 
 
-destIPAdress="10.1.3.2"
+#destIPAdress="10.1.3.2"
+destIPAdress="localhost"
 
-fileName="ping-psr-t06"
+fileName="ping-psr-t07"
 
 
 # Paper 5 x 10³
-pingMaxCount=5000
+pingMaxCount=50
 
 # in Seconds
-interPacketGap=(0.01 0.05 0.1 0.2 0.5 1.0 1.5 2.0 2.5 3.0 10.0 10.5 11.0)
+interPacketGap=(0.01 0.1 0.5 1.0 2.0 2.3 2.8 3.5 8.0 10.0 11.0)
 
 result=""
+
+echo "${RANDOM % 100}"
 
 
 for (( i=0; i<${#interPacketGap[@]}; i++ ));
@@ -23,8 +26,10 @@ do
 
     echo "$outputFileName will be finished at $(date +%T --date="@$(echo "$(date '+%s') + ${interPacketGap[i]} * $pingMaxCount" | bc)")"
 
-    # ping "-c $pingMaxCount -i $interPacketGap $destIPAdress"
-    pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} localhost | tr " " "\n")
+
+        # ping "-c $pingMaxCount -i $interPacketGap $destIPAdress"
+        rand=$(echo "scale=2;$((RANDOM % 100)) / 100" | bc)
+        pingData=$(sudo ping -c $pingMaxCount -i $(echo "${interPacketGap[i]} + $rand" | bc) $destIPAdress | tr " " "\n")
 
     echo "$outputFileName is Finished at $(date +%T)"
 
