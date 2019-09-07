@@ -145,7 +145,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
 	ns.short_DRX = true
 	ns.continuous_reception = false
-	ns.continuous_reception_active = false
 	ns.inactive_short_DRX_cycle = {0, 0}
 	ns.inactive_long_DRX_cycle = {0, 0}
 
@@ -266,14 +265,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
 				--print("sendWithDelay() returned")
 				-- last_activity = limiter:get_tsc_cycles()
-				ns.continuous_reception_active = true
-			else
-				ns.continuous_reception_active = false
-			end
+                last_activity = limiter:get_tsc_cycles()
 
-			-- reset the timer from the Thread without packages too
-			if ns.continuous_reception_active then
-				last_activity = limiter:get_tsc_cycles()
 			end
 
 			if limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
