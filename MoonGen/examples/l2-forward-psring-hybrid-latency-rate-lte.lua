@@ -104,16 +104,24 @@ function receive(ring, rxQueue, rxDev)
 			local ts = limiter:get_tsc_cycles()
 			buf.udata64 = ts
 		end
-		if count > 0 then
-			pipe:sendToPktsizedRing(ring.ring, bufs, count)
-			--print("ring count: ",pipe:countPacketRing(ring.ring))
-			ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+		-- A little random delay, for the ping Test
+		local ts = limiter:get_tsc_cycles()
+		while limiter:get_tsc_cycles() < ts + (math.random()) do
+			if not mg.running() then
+				return
+			end
 		end
-	end
-	count_hist:print()
-	count_hist:save("rxq-pkt-count-distribution-histogram-"..rxDev["id"]..".csv")
-	ringsize_hist:print()
-	ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
+
+		if count > 0 then
+				pipe:sendToPktsizedRing(ring.ring, bufs, count)
+				--print("ring count: ",pipe:countPacketRing(ring.ring))
+				ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
+			end
+		end
+		count_hist:print()
+		count_hist:save("rxq-pkt-count-distribution-histogram-"..rxDev["id"]..".csv")
+		ringsize_hist:print()
+		ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
 end
 
 function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
