@@ -17,7 +17,7 @@ destInterface="3"
 destIPAdress="10.1.3.2"
 
 moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-lte.lua"
-testName="rnc-psr-t06-"
+testName="rnc-psr-t07-"
 #testName="iperf-psr-t01-"
 
 iperfExecuteTime="2"
@@ -30,7 +30,7 @@ waitTime=$((dagExecuteTime))
 rateList="1 5 10 15 20 25 30 35 40 45 50"
  #10 50 100"
 # List from latencies to test
-latencyList="0"
+latencyList="15"
 # List from RingSize, how much Packages will stay in the ring
 # See measurement from the paper
 ringSizeList="280"
@@ -56,7 +56,7 @@ ssh $clientPC 'sudo killall rude' &
 sleep 1
 
 
-moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l 25 25 -q 280 280 -c 0.05 0.05 -u 40 40"
+moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l 15 15 -q 280 280 -c 0.05 0.05"
 moonGenTerminateCommand="sudo killall MoonGen"
 
 ssh $moonGenPC $moonGenMainCommand &

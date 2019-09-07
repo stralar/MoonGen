@@ -652,7 +652,8 @@ def bandwidthUDP():
                 timeStampDest = float(destinationPckt[1]) - startTimeStamp
 
 
-                if(i == len(csvArray) - 1):
+                #if(i == len(csvArray) - 1):
+                if(False):
                     actualBandwidth = byteTransfared / bandWidthInterval
                     byteString = str(ipId) + "\t" + str(timeCounter - 1 + timeStampDest - firstInIntervall) + "\t" + str((actualBandwidth * 8) / (timeStampDest - firstInIntervall)) + "\n"
 

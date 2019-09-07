@@ -35,27 +35,30 @@ class BoxplotThroughput():
 
     yLabel = "throughput [Mbps]"
     xLabel = "fixed send rate [Mbps]"
-    boxLabel = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    boxLabelX = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    boxLabelY = [10, 20, 30, 40, 50]
 
     fileSaveName = "-throughput"
 
     def __init__(self):
 
         # Collect Data from files
-
-        for i in range(len(self.mbits)):
+        for l in range(len(self.mbits)):
             tmpAllData = []
-            filePathDetails = fileName + str(self.mbits[i]) + "-*_bit_per_*"
+            filePathDetails = fileName + str(self.mbits[l]) + "-*_bit_per_*"
 
 
-            for file in glob.glob(filePathDetails):
+            for file in sorted(glob.glob(filePathDetails)):
                 #print(file)
                 tmpAllData.append(np.loadtxt(file, delimiter="\t"))
 
             tmpData = []
             for i in range(len(tmpAllData)):
                 for j in range(len(tmpAllData[i])):
-                    tmpData.append(tmpAllData[i][j][2] / 1000000)
+                    try:
+                        tmpData.append(tmpAllData[i][j][2] / 1000000)
+                    except:
+                        print(i)
 
             self.data.append(tmpData)
 
@@ -93,8 +96,8 @@ class BoxplotThroughput():
         ax.set_xlabel(self.xLabel)
         ax.set_ylabel(self.yLabel)
 
-        ax.set_xticklabels(self.boxLabel)
-        ax.set_ybound(0, 50)
+        ax.set_xticklabels(self.boxLabelX)
+        ax.set_yticks(self.boxLabelY)
 
         # Save the figure
         fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
@@ -108,17 +111,17 @@ class BoxplotDelay():
 
     yLabel = "delay [sec]"
     xLabel = "fixed send rate [Mbps]"
-    boxLabel = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    boxLabelX = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    boxLabelY = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]
 
     fileSaveName = "-delay"
 
     def __init__(self):
 
         # Collect Data from files
-
-        for i in range(len(self.mbits)):
+        for l in range(len(self.mbits)):
             tmpAllData = []
-            filePathDetails = fileName + str(self.mbits[i]) + "-*_latency.csv"
+            filePathDetails = fileName + str(self.mbits[l]) + "-*_latency.csv"
 
 
             for file in glob.glob(filePathDetails):
@@ -167,7 +170,8 @@ class BoxplotDelay():
 
         ax.grid(axis='y', ls=':', color='gray')
 
-        ax.set_xticklabels(self.boxLabel)
+        ax.set_xticklabels(self.boxLabelX)
+        ax.set_ybound(0, 0.35)
 
         # Save the figure
         fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
@@ -178,6 +182,9 @@ class AverageDelay():
 
     yLabel = "delay [sec]"
     xLabel = "packet nr"
+
+    boxLabelY = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+
 
     def __init__(self, mbits):
 
@@ -201,9 +208,10 @@ class AverageDelay():
 
         for i in range(len(tmpAllData)):
             tmpData = []
+
             for j in range(len(tmpAllData[i])):
-                tmpData.append([tmpAllData[i][j][0] - tmpAllData[i][0][0], tmpAllData[i][j][2]])
-                #tmpData.append(tmpAllData[i][j][2])
+                #tmpData.append([tmpAllData[i][j][0] - tmpAllData[i][0][0], tmpAllData[i][j][2]])
+                tmpData.append([j, tmpAllData[i][j][2]])
 
             self.data.append(tmpData)
 
@@ -220,8 +228,6 @@ class AverageDelay():
                 #print(str(singleMean) + " | " + str(singleMean / len(self.data)))
 
             self.mean.append([self.data[0][i][0], singleMean / len(self.data)])
-
-
 
     def draw_graph(self):
         #plt.hold(False)
@@ -255,6 +261,8 @@ class AverageDelay():
 
         plt.xlabel(self.xLabel)
         plt.ylabel(self.yLabel)
+
+        plt.yticks(self.boxLabelY)
 
         plt.grid(ls=':', color='gray')
 
@@ -477,7 +485,6 @@ class CCDF():
 
 
 if __name__ == '__main__':
-    '''
     bt = BoxplotThroughput()
 
     bt.draw_graph()
@@ -512,4 +519,4 @@ if __name__ == '__main__':
 
     p = CCDF()
     p.draw_graph()
-
+'''
