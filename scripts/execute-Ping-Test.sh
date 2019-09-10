@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-#destIPAdress="10.1.3.2"
-destIPAdress="localhost"
+destIPAdress="10.1.3.2"
+#destIPAdress="localhost"
 
 fileName="ping-psr-t07"
 
@@ -28,8 +28,8 @@ do
 
 
         # ping "-c $pingMaxCount -i $interPacketGap $destIPAdress"
-        rand=$(echo "scale=2;$((RANDOM % 100)) / 100" | bc)
-        pingData=$(sudo ping -c $pingMaxCount -i $(echo "${interPacketGap[i]} + $rand" | bc) $destIPAdress | tr " " "\n")
+        # rand=$(echo "scale=2;$((RANDOM % 100)) / 100" | bc)
+        pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} $destIPAdress | tr " " "\n")
 
     echo "$outputFileName is Finished at $(date +%T)"
 
