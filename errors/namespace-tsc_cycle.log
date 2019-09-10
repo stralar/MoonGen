@@ -1,0 +1,263 @@
+[1;37m[INFO]  Initializing DPDK. This will take a few seconds...[0m
+EAL: Probing VFIO support...
+EAL: PCI device 0000:19:00.0 on NUMA socket 0
+EAL:   probe driver: 8086:37d2 net_i40e
+EAL: PCI device 0000:19:00.1 on NUMA socket 0
+EAL:   probe driver: 8086:37d2 net_i40e
+EAL: PCI device 0000:65:00.0 on NUMA socket 0
+EAL:   probe driver: 8086:1521 net_e1000_igb
+EAL: PCI device 0000:65:00.1 on NUMA socket 0
+EAL:   probe driver: 8086:1521 net_e1000_igb
+EAL: PCI device 0000:65:00.2 on NUMA socket 0
+EAL:   probe driver: 8086:1521 net_e1000_igb
+EAL: PCI device 0000:65:00.3 on NUMA socket 0
+EAL:   probe driver: 8086:1521 net_e1000_igb
+[1;37m[INFO]  Found 5 usable devices:[0m
+   Device 0: AC:1F:6B:B9:EC:7F ([0;32mIntel Corporation Ethernet Connection X722 for 10GBASE-T[0m)
+   Device 1: B4:96:91:43:DE:40 ([0;32mIntel Corporation I350 Gigabit Network Connection[0m)
+   Device 2: B4:96:91:43:DE:41 ([0;32mIntel Corporation I350 Gigabit Network Connection[0m)
+   Device 3: B4:96:91:43:DE:42 ([0;32mIntel Corporation I350 Gigabit Network Connection[0m)
+   Device 4: B4:96:91:43:DE:43 ([0;32mIntel Corporation I350 Gigabit Network Connection[0m)
+[1;37m[INFO]  Waiting for devices to come up...[0m
+[1;37m[INFO]  Device 3 (B4:96:91:43:DE:42) is up: 1000 MBit/s[0m
+[1;37m[INFO]  Device 2 (B4:96:91:43:DE:41) is up: 1000 MBit/s[0m
+[1;37m[INFO]  [0;32m2 devices are up.[0m[0m
+forward with rate 40 and latency 15 and loss rate 0 and clossrate 0 and catchuprate 0
+linkspeed = 1000
+tsc_hz = 2100004244
+Thread: 2
+forward with rate 40 and latency 15 and loss rate 0 and clossrate 0 and catchuprate 0
+[0;31m[FATAL] Lua error in task forward[0m
+linkspeed = 1000
+tsc_hz = 2100004244
+Thread: 1
+[0;31m[FATAL] Lua error in task forward[0m
+...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua:94: attempt to index local 'cType' (a nil value)
+Stack Traceback
+===============
+(2) Lua field 'dump' at file '/users/lars/MoonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua:119'
+	Local variables:
+	 opts = table: 0x417e6c08  {nocode:true, compact:true, name:_, sparse:true}
+	 ignoreMt = nil
+	 name = string: "_"
+	 indent = nil
+	 fatal = nil
+	 maxnum = nil
+	 sparse = boolean: true
+	 custom = nil
+	 huge = boolean: true
+	 space = string: ""
+	 maxl = number: inf
+	 iname = string: "__"
+	 comm = nil
+	 seen = table: 0x417e6c98  {}
+	 sref = table: 0x417e6cc0  {1:local __={}}
+	 syms = table: 0x417e6d00  {}
+	 symn = number: 0
+	 gensym = Lua function 'gensym' (defined at line 19 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 safestr = Lua function 'safestr' (defined at line 22 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 comment = Lua function 'comment' (defined at line 25 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 globerr = Lua function 'globerr' (defined at line 26 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 safename = Lua function 'safename' (defined at line 28 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 alphanumsort = Lua function '(anonymous)' (defined at line 33 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 val2str = Lua function 'val2str' (defined at line 40 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 sepr = string: ";"
+(3) Lua metamethod '__newindex' at file '/users/lars/MoonGen/MoonGen/build/../libmoon/lua/namespaces.lua:75'
+	Local variables:
+	 key = string: "inactive_time_short_DRX_cycle_thread1"
+	 (*temporary) = string: "inactive_time_short_DRX_cycle_thread1"
+(4) Lua function 'forward' at file 'MoonGen/examples/l2-forward-psring-hybrid-latency-rate-lte.lua:161' (best guess)
+	Local variables:
+	 threadNumber = number: 2
+	 ring = table: 0x417e21d8  {ring:cdata<struct ps_ring *>: 0x7f391d5bff00}
+	 txQueue = [TxQueue: id=2, qid=0]  {qid:0, dev:[Device: id=2], id:2}
+	 txDev = [Device: id=2]  {initialized:true, rxQueues:table: 0x417e3830, txQueues:table: 0x417e3880 (more...)}
+	 rate = number: 40
+	 latency = number: 15
+	 xlatency = number: 0
+	 lossrate = number: 0
+	 clossrate = number: 0
+	 catchuprate = number: 0
+	 numThreads = number: 1
+	 linkspeed = number: 1000
+	 tsc_hz = number: 2.1e+09
+	 tsc_hz_ms = number: 2.1e+06
+	 (*temporary) = C function: builtin#174
+	 (*temporary) = number: 7.26811e-313
+	 (*temporary) = userdata: 0x40561c70
+	 (*temporary) = nil
+	 (*temporary) = number: 10
+	 (*temporary) = number: 11
+	 (*temporary) = number: 12
+	 (*temporary) = string: "\9\9return function(tbl)\
+\9\9\9return tbl[1], tbl[2], tbl[3], tbl[4], tbl[5], tbl[6], tbl[7], tbl[8], tbl[9], tbl[10], tbl[11], tbl[12], tbl[13]\9\9end\
+\9"
+	 (*temporary) = number: 9
+	 (*temporary) = number: 10
+	 (*temporary) = number: 11
+	 (*temporary) = number: 12
+	 (*temporary) = number: 13
+	 (*temporary) = number: 8
+	 (*temporary) = number: 9
+	 (*temporary) = number: 10
+	 (*temporary) = number: 11
+	 (*temporary) = number: 12
+	 (*temporary) = number: 13
+	 (*temporary) = number: 8
+	 (*temporary) = number: 9
+	 (*temporary) = number: 10
+	 (*temporary) = number: 11
+	 (*temporary) = number: 12
+	 (*temporary) = number: 13
+	 (*temporary) = number: 8
+	 (*temporary) = number: 9
+	 (*temporary) = number: 5.76417e+07
+(5) global C function 'xpcall'
+(6) Lua upvalue 'slave' at file '/users/lars/MoonGen/MoonGen/build/../libmoon/lua/main.lua:128'
+	Local variables:
+	 args = table: 0x417e10d0  {1:3, 2:forward, 3:2, 4:cdata<struct namespace *>: 0x7f391d5dba60, 5:table: 0x417e21d8 (more...)}
+	 ok = boolean: true
+	 taskId = number: 3
+	 func = string: "forward"
+	 (*temporary) = table: 0x417e39c0  {}
+	 (*temporary) = C function: select
+	 (*temporary) = number: 2
+(7) Lua function 'main' at file '/users/lars/MoonGen/MoonGen/build/../libmoon/lua/main.lua:148' (best guess)
+	Local variables:
+	 task = string: "slave"
+	...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua:94: attempt to index local 'cType' (a nil value)
+...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua:94: attempt to index local 'cType' (a nil value)
+Stack Traceback
+===============
+(2) Lua field 'dump' at file '/users/lars/MoonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua:119'
+	Local variables:
+	 opts = table: 0x4140d140  {nocode:true, compact:true, name:_, sparse:true}
+	 ignoreMt = nil
+	 name = string: "_"
+	 indent = nil
+	 fatal = nil
+	 maxnum = nil
+	 sparse = boolean: true
+	 custom = nil
+	 huge = boolean: true
+	 space = string: ""
+	 maxl = number: inf
+	 iname = string: "__"
+	 comm = nil
+	 seen = table: 0x4140d1d0  {}
+	 sref = table: 0x4140d1f8  {1:local __={}}
+	 syms = table: 0x4140d238  {}
+	 symn = number: 0
+	 gensym = Lua function 'gensym' (defined at line 19 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 safestr = Lua function 'safestr' (defined at line 22 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 comment = Lua function 'comment' (defined at line 25 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 globerr = Lua function 'globerr' (defined at line 26 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 safename = Lua function 'safename' (defined at line 28 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 alphanumsort = Lua function '(anonymous)' (defined at line 33 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 val2str = Lua function 'val2str' (defined at line 40 of chunk ...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua)
+	 sepr = string: ";"
+(3) Lua metamethod '__newindex' at file '/users/lars/MoonGen/MoonGen/build/../libmoon/lua/namespaces.lua:75'
+	Local variables:
+	 key = string: "inactive_time_short_DRX_cycle_thread1"
+	 (*temporary) = string: "inactive_time_short_DRX_cycle_thread1"
+(4) Lua function 'forward' at file 'MoonGen/examples/l2-forward-psring-hybrid-latency-rate-lte.lua:161' (best guess)
+	Local variables:
+	 threadNumber = number: 1
+	 ring = table: 0x41406f48  {ring:cdata<struct ps_ring *>: 0x7f391d5bff10}
+	 txQueue = [TxQueue: id=3, qid=0]  {qid:0, dev:[Device: id=3], id:3}
+	 txDev = [Device: id=3]  {initialized:true, rxQueues:table: 0x41409c30, txQueues:table: 0x41409c80 (more...)}
+	 rate = number: 40
+	 latency = number: 15
+	 xlatency = number: 0
+	 lossrate = number: 0
+	 clossrate = number: 0
+	 catchuprate = number: 0
+	 numThreads = number: 1
+	 linkspeed = number: 1000
+	 tsc_hz = number: 2.1e+09
+	 tsc_hz_ms = number: 2.1e+06
+	 (*temporary) = C function: builtin#174
+	 (*temporary) = number: 7.26833e-313
+	 (*temporary) = userdata: 0x4099fc60
+	 (*temporary) = nil
+	 (*temporary) = number: 10
+	 (*temporary) = number: 11
+	 (*temporary) = number: 12
+	 (*temporary) = string: "\9\9return function(tbl)\
+\9\9\9return tbl[1], tbl[2], tbl[3], tbl[4], tbl[5], tbl[6], tbl[7], tbl[8], tbl[9], tbl[10], tbl[11], tbl[12], tbl[13]\9\9end\
+\9"
+	 (*temporary) = number: 9
+	 (*temporary) = number: 10
+	 (*temporary) = number: 11
+	 (*temporary) = number: 12
+	 (*temporary) = number: 13
+	 (*temporary) = number: 8
+	 (*temporary) = number: 9
+	 (*temporary) = number: 10
+	 (*temporary) = number: 11
+	 (*temporary) = number: 12
+	 (*temporary) = number: 13
+	 (*temporary) = number: 8
+	 (*temporary) = number: 9
+	 (*temporary) = number: 10
+	 (*temporary) = number: 11
+	 (*temporary) = number: 12
+	 (*temporary) = number: 13
+	 (*temporary) = number: 8
+	 (*temporary) = number: 9
+	 (*temporary) = number: 4.85196e+09
+(5) global C function 'xpcall'
+(6) Lua upvalue 'slave' at file '/users/lars/MoonGen/MoonGen/build/../libmoon/lua/main.lua:128'
+	Local variables:
+	 args = table: 0x41406d10  {1:2, 2:forward, 3:1, 4:cdata<struct namespace *>: 0x7f391d5dba60, 5:table: 0x41406f48 (more...)}
+	 ok = boolean: true
+	 taskId = number: 2
+	 func = string: "forward"
+	 (*temporary) = table: 0x41409e60  {}
+	 (*temporary) = C function: select
+	 (*temporary) = number: 2
+(7) Lua function 'main' at file '/users/lars/MoonGen/MoonGen/build/../libmoon/lua/main.lua:148' (best guess)
+	Local variables:
+	 task = string: "slave"
+	...oonGen/MoonGen/build/../libmoon/lua/lib/Serpent/init.lua:94: attempt to index local 'cType' (a nil value)
+[1;36m[Device: id=3] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=2] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=3] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=2] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=3] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=2] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=3] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=2] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=3] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=2] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=3] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=2] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=3] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=2] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=3] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=2] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=3] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=2] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=3] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=2] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=3] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=2] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=3] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=2] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=3] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=2] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=3] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[0;34m[Device: id=2] TX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+Samples: 1, Average: 0.0 ns, StdDev: nan ns, Quartiles: nan/nan/nan ns
+Samples: 1, Average: 0.0 ns, StdDev: nan ns, Quartiles: nan/nan/nan ns
+[1;37m[INFO]  Saving histogram to 'rxq-pkt-count-distribution-histogram-3.csv'[0m
+[1;37m[INFO]  Saving histogram to 'rxq-pkt-count-distribution-histogram-2.csv'[0m
+Samples: 0, Average: nan ns, StdDev: 0.0 ns, Quartiles: nan/nan/nan ns
+[1;37m[INFO]  Saving histogram to 'rxq-ringsize-distribution-histogram-3.csv'[0m
+Samples: 0, Average: nan ns, StdDev: 0.0 ns, Quartiles: nan/nan/nan ns
+[1;37m[INFO]  Saving histogram to 'rxq-ringsize-distribution-histogram-2.csv'[0m
+[1;36m[Device: id=3] RX[0m: 0.00 Mpps, 0 Mbit/s (0 Mbit/s with framing)
+[1;36m[Device: id=3] RX[0m: 0.00 (StdDev 0.00) Mpps, 0 (StdDev 0) Mbit/s (0 Mbit/s with framing), total 0 packets with 0 bytes (incl. CRC)
+[1;36m[Device: id=2] RX[0m: 0.00 (StdDev 0.00) Mpps, 0 (StdDev 0) Mbit/s (0 Mbit/s with framing), total 0 packets with 0 bytes (incl. CRC)
+[0;34m[Device: id=3] TX[0m: 0.00 (StdDev 0.00) Mpps, 0 (StdDev 0) Mbit/s (0 Mbit/s with framing), total 0 packets with 0 bytes (incl. CRC)
+[0;34m[Device: id=2] TX[0m: 0.00 (StdDev 0.00) Mpps, 0 (StdDev 0) Mbit/s (0 Mbit/s with framing), total 0 packets with 0 bytes (incl. CRC)
