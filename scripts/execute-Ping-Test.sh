@@ -11,7 +11,7 @@ fileName="ping-psr-t07"
 pingMaxCount=50
 
 # in Seconds
-interPacketGap=(0.01 0.1 0.5 1.0 2.0 2.3 2.8 3.5 8.0 10.0 11.0)
+interPacketGap=(0.01 0.1 0.5 1.0 2.0 2.3 2.8 3.5 10.0 11.0 13.0)
 
 result=""
 
