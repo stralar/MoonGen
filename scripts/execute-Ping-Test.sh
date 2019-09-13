@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-destIPAdress="10.1.3.2"
-#destIPAdress="localhost"
+#destIPAdress="10.1.3.2"
+destIPAdress="localhost"
 
 fileName="ping-psr-t07"
 
@@ -11,12 +11,9 @@ fileName="ping-psr-t07"
 pingMaxCount=50
 
 # in Seconds
-interPacketGap=(0.01 0.1 0.5 1.0 2.0 2.3 2.8 3.5 10.0 11.0 13.0)
+interPacketGap=(0.01 0.1 0.5 1.0) # 2.0 2.3 2.8 3.5 10.0 11.0 13.0)
 
 result=""
-
-echo "${RANDOM % 100}"
-
 
 for (( i=0; i<${#interPacketGap[@]}; i++ ));
 do

@@ -9,7 +9,8 @@ moonGenPC="lars@130.75.73.225"
 dagPC="stratmann@130.75.73.131"
 
 
-
+#srcInterface="3"
+#destInterface="2"
 srcInterface="2"
 destInterface="3"
 
@@ -17,7 +18,7 @@ destInterface="3"
 destIPAdress="10.1.3.2"
 
 moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-lte.lua"
-testName="rnc-psr-t08-"
+testName="rnc-psr-uplink-t08-"
 #testName="iperf-psr-t01-"
 
 iperfExecuteTime="2"
@@ -30,10 +31,10 @@ waitTime=$((dagExecuteTime))
 rateList="1 5 10 15 20 25 30 35 40 45 50"
  #10 50 100"
 # List from latencies to test
-latencyList="15"
+latencyList="10"
 # List from RingSize, how much Packages will stay in the ring
 # See measurement from the paper
-ringSizeList="280"
+ringSizeList="1100"
 
 # number of similar tests
 testNumber=10
@@ -56,7 +57,7 @@ ssh $clientPC 'sudo killall rude' &
 sleep 1
 
 
-moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l 15 15 -q 280 280 -c 0.05 0.05"
+moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l 25 10 -q 280 1100"
 moonGenTerminateCommand="sudo killall MoonGen"
 
 ssh $moonGenPC $moonGenMainCommand &

@@ -3,6 +3,7 @@
 
 pythonScript="$(cd "$(dirname "$0")" ; pwd)/network_analysis.py"
 
+
 for dir in "$@"
 do
     srcFile=$dir

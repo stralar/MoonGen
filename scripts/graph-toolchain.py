@@ -415,7 +415,7 @@ class LossFrequency2():
         plt.close()
 
 class CCDF():
-    yLabel = "CCDF"
+    yLabel = "CDF"
     xLabel = "RTT [s]"
 
     def __init__(self):
@@ -434,27 +434,35 @@ class CCDF():
 
         for file in sorted(glob.glob(filePathDetails)):
             print(file)
-            self.data.append(np.loadtxt(file, delimiter="\t"))
+            self.data.append(np.sort(np.loadtxt(file, delimiter="\t")))
 
-        #print(self.data)
+        print(len(self.data))
+        #np.bincount(self.data)
 
         # calculate cdf values
-
         for val in self.data:
             tmpSum = float(val.sum())
+            tmpCumSum = val.cumsum()
+            tmpCumSum2 = tmpCumSum / tmpCumSum[-1]
+            print("\nCumSum: " + str(tmpCumSum) + "\nNorm: "+ str(tmpCumSum2))
+
             self.sum.append(tmpSum)
             self.cdf.append(val.cumsum(0) / tmpSum)
+            #self.cdf.append(np.cumsum()/ tmpSum)
+
 
             # calculate ccdf values
             self.ccdf.append(1 - (val.cumsum(0) / tmpSum))
 
-        print(len(self.ccdf))
 
 
     def draw_graph(self):
 
-        for i in range(len(self.cdf)):
-            plt.plot(self.data[i], self.cdf[i], 'bo')
+        #for i in range(len(self.cdf)):
+        #    plt.plot(self.data[i], self.cdf[i], 'bo')
+
+        for val in self.data:
+            plt.plot((val.cumsum() / val.cumsum()[-1]))
 
         plt.xscale('log')
 
@@ -467,11 +475,14 @@ class CCDF():
         plt.close()
 
 
-        for i in range(len(self.ccdf)):
-            plt.plot(self.data[i], self.ccdf[i], 'bo')
+        #for i in range(len(self.ccdf)):
+        #    plt.plot(self.data[i], self.ccdf[i], 'bo')
+        for val in self.data:
+            plt.plot(val, 1 - (val.cumsum() / val.cumsum()[-1]))
+
 
         plt.yscale('log')
-        plt.xscale('log')
+        #plt.xscale('log')
 
 
         plt.ylabel('CCDF')
@@ -485,38 +496,38 @@ class CCDF():
 
 
 if __name__ == '__main__':
-    bt = BoxplotThroughput()
+    if fileName:
+        bt = BoxplotThroughput()
 
-    bt.draw_graph()
+        bt.draw_graph()
 
-    bd = BoxplotDelay()
+        bd = BoxplotDelay()
 
-    bd.draw_graph()
-    ad = AverageDelay(5)
-    ad.draw_graph()
+        bd.draw_graph()
+        ad = AverageDelay(5)
+        ad.draw_graph()
 
-    ad2 = AverageDelay(20)
-    ad2.draw_graph()
+        ad2 = AverageDelay(20)
+        ad2.draw_graph()
 
-    ad3 = AverageDelay(40)
-    ad3.draw_graph()
+        ad3 = AverageDelay(40)
+        ad3.draw_graph()
 
-    ad4 = AverageDelay(50)
-    ad4.draw_graph()
+        ad4 = AverageDelay(50)
+        ad4.draw_graph()
 
-    lf = LossFrequency(40)
-    lf.draw_graph()
+        lf = LossFrequency(40)
+        lf.draw_graph()
 
-    lf = LossFrequency(50)
-    lf.draw_graph()
+        lf = LossFrequency(50)
+        lf.draw_graph()
 
-    lf2 = LossFrequency2(40)
-    lf2.draw_graph()
+        lf2 = LossFrequency2(40)
+        lf2.draw_graph()
 
-    lf2 = LossFrequency2(50)
-    lf2.draw_graph()
-    '''
+        lf2 = LossFrequency2(50)
+        lf2.draw_graph()
 
-    p = CCDF()
-    p.draw_graph()
-'''
+    if fileNamePing:
+        p = CCDF()
+        p.draw_graph()
