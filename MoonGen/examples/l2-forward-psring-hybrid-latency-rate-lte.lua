@@ -27,12 +27,17 @@ function configure(parser)
 	parser:option("-o --loss", "Rate of packet drops"):args(2):convert(tonumber):default({0,0})
 	parser:option("-c --concealedloss", "Rate of concealed packet drops"):args(2):convert(tonumber):default({0,0})
 	parser:option("-u --catchuprate", "After a concealed loss, this rate will apply to the backed-up frames."):args(2):convert(tonumber):default({0,0})
-	parser:option("-y --random", "MAnipulate the receiving time by adding [0-1]ms"):args(1):convert(tobool):default({false})
+	parser:option("-y --random", "Manipulate the receiving time by adding [0-1]ms"):args(1):convert(tonumber):default({0})
 	return parser:parse()
 end
 
 
 function master(args)
+
+	if not args.random[1] == 0 and not args.random[1] == 1 then
+		print("Wrong Parameter for -y, only 0 or 1 accept")
+		return
+	end
 	-- configure devices
 	for i, dev in ipairs(args.dev) do
 		args.dev[i] = device.config{
@@ -72,15 +77,15 @@ function master(args)
 	for i = 1, args.threads do
 		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1])
 		if args.dev[1] ~= args.dev[2] then
-			mg.startTask("forward", 2, ns, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2], args.random[1])
+			mg.startTask("forward", 2, ns, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2])
 		end
 	end
 
 	-- start the receiving/latency tasks
 	for i = 1, args.threads do
-		mg.startTask("receive", ring1, args.dev[2]:getRxQueue(i - 1), args.dev[2])
+		mg.startTask("receive", ring1, args.dev[2]:getRxQueue(i - 1), args.dev[2], args.random[1] == 1)
 		if args.dev[1] ~= args.dev[2] then
-			mg.startTask("receive", ring2, args.dev[1]:getRxQueue(i - 1), args.dev[1])
+			mg.startTask("receive", ring2, args.dev[1]:getRxQueue(i - 1), args.dev[1], args.random[1] == 1)
 		end
 	end
 
@@ -88,7 +93,7 @@ function master(args)
 end
 
 
-function receive(ring, rxQueue, rxDev)
+function receive(ring, rxQueue, rxDev, randomON)
 	--print("receive thread...")
 
 	local tsc_hz = libmoon:getCyclesFrequency()
@@ -108,7 +113,7 @@ function receive(ring, rxQueue, rxDev)
 
 			--local last_time = limiter:get_tsc_cycles() + (tsc_hz_ms * -math.log(math.random()))
 			local last_time = limiter:get_tsc_cycles() + (tsc_hz_ms * math.random())
-			while true and limiter:get_tsc_cycles() < last_time do
+			while randomON and limiter:get_tsc_cycles() < last_time do
 				if not mg.running() then
 					return
 				end
@@ -132,7 +137,7 @@ function receive(ring, rxQueue, rxDev)
 	ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
 end
 
-function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate, random)
+function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
 	print("forward with rate "..rate.." and latency "..latency.." and loss rate "..lossrate.." and clossrate "..clossrate.." and catchuprate "..catchuprate)
 	local numThreads = 1
 
@@ -168,8 +173,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 	ns.first_rcc_connected = false
 
-	-- ns.last_activity = limiter:get_tsc_cycles() / 2
-
 	local debug = false
 
 
@@ -187,8 +190,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- between 0.32 and 2.56 sec
 	local rcc_idle_cycle_length = 100 * tsc_hz_ms
 
-	local short_DRX_cycle_length = 40 * tsc_hz_ms
-	local long_DRX_cycle_length = 60 * tsc_hz_ms
+	local short_DRX_cycle_length = 15 * tsc_hz_ms
+	local long_DRX_cycle_length = 20 * tsc_hz_ms
 
 	local active_time = 2 * tsc_hz_ms
 
@@ -252,8 +255,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 						--print "entering catchup mode!"
 					end
 				end
-				-- TODO compare the timestamp if its lower than the give latency add some latency, so we can manage different MBit rates
-				-- TODO because by higher rates a Latency will be create automatly because they are stuck in the Queue
+
 				local send_time = arrival_timestamp
 				if (closses > 0) then
 					send_time = send_time + (((closses+1)*concealed_resend_time + latency + extraDelay) * tsc_hz_ms)
@@ -286,10 +288,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				-- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
 				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
-				--print("sendWithDelay() returned")
-				-- last_activity = limiter:get_tsc_cycles()
-                		last_activity = limiter:get_tsc_cycles()
 
+				last_activity = limiter:get_tsc_cycles()
 			end
 
 			if limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
@@ -358,12 +358,11 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			if ns.short_DRX  then
 				last_activity = limiter:get_tsc_cycles()
 
-				-- time to wait
-				-- TODO maybe need to add pipe:recvFromPktsizedRing(ring.ring, bufs, 1) for drop the packages
-				--print("in short_DRX... ",last_activity, short_DRX_cycle_length, active_time, (short_DRX_cycle_length - active_time))
-				local start_of_wait = limiter:get_tsc_cycles()
 				local packet_arrival_time = 0
 				local lcount = 0
+				time_stuck_in_loop = 0
+
+				-- time to wait
 				while limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length - active_time do
 					lcount = pipe:countPktsizedRing(ring.ring)
 					if (lcount > 0) and (packet_arrival_time == 0) then
@@ -373,14 +372,14 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 						return
 					end
 				end
+
+				-- save the time the package waited
 				last_activity = limiter:get_tsc_cycles()
-				--print("waited for time: ",(last_activity-start_of_wait), (last_activity-start_of_wait)/tsc_hz_ms)
 				if (lcount > 0) then
-					print("packet in queue during T_sc: ",(last_activity-packet_arrival_time),(last_activity-packet_arrival_time)/tsc_hz_ms)
 					time_stuck_in_loop = (last_activity-packet_arrival_time)
 				end
+
 				-- T_on is active
-				local start_of_ton = limiter:get_tsc_cycles()
 				while limiter:get_tsc_cycles() < last_activity + active_time do
 					if not mg.running() then
 						return
@@ -404,8 +403,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 						break
 					end
 				end
-				local end_of_ton = limiter:get_tsc_cycles()
-				--print("stayed in ton for time: ",(end_of_ton-start_of_ton), (end_of_ton-start_of_ton)/tsc_hz_ms)
 
 				if not ns.continuous_reception and threadNumber == 1 then
 					ns.inactive_short_DRX_cycle_thread1 =  {ns.inactive_short_DRX_cycle_thread1[1] + 1, ns.inactive_short_DRX_cycle_thread2[2]}
@@ -480,8 +477,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 
 				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
-				-- TODO maybe need to add pipe:recvFromPktsizedRing(ring.ring, bufs, 1) for drop the packages
-				if ns.inactive_long_DRX_cycle_thread1[threadNumber] >= max_inactive_long_DRX_cycle 
+				if ns.inactive_long_DRX_cycle_thread1[threadNumber] >= max_inactive_long_DRX_cycle
 					or ns.inactive_long_DRX_cycle_thread2[threadNumber] >= max_inactive_long_DRX_cycle then
 					print("long_DRX deactivating after inactive time, "..threadNumber)
 					ns.inactive_long_DRX_cycle_thread1 = {0, 0}

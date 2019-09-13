@@ -17,7 +17,7 @@ destInterface="3"
 destIPAdress="10.1.3.2"
 
 moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-lte.lua"
-testName="rnc-psr-t07-"
+testName="rnc-psr-t08-"
 #testName="iperf-psr-t01-"
 
 iperfExecuteTime="2"
@@ -65,7 +65,7 @@ sleep 5
 
 
 #Initial
-ssh lars@pc1 $serverCommand &
+ssh $serverPC $serverCommand &
 sleep 1
 
 for r in $rateList;
