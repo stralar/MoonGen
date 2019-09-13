@@ -27,14 +27,14 @@ function configure(parser)
 	parser:option("-o --loss", "Rate of packet drops"):args(2):convert(tonumber):default({0,0})
 	parser:option("-c --concealedloss", "Rate of concealed packet drops"):args(2):convert(tonumber):default({0,0})
 	parser:option("-u --catchuprate", "After a concealed loss, this rate will apply to the backed-up frames."):args(2):convert(tonumber):default({0,0})
-	parser:option("-y --random", "Manipulate the receiving time by adding [0-1]ms"):args(1):convert(tonumber):default({0})
+	parser:option("-y --random", "Manipulate the receiving time by adding [0-1]ms"):args(1):convert(tonumber):default(0)
 	return parser:parse()
 end
 
 
 function master(args)
 
-	if not args.random[1] == 0 and not args.random[1] == 1 then
+	if args.random ~= 0 and  args.random ~= 1 then
 		print("Wrong Parameter for -y, only 0 or 1 accept")
 		return
 	end
@@ -83,9 +83,9 @@ function master(args)
 
 	-- start the receiving/latency tasks
 	for i = 1, args.threads do
-		mg.startTask("receive", ring1, args.dev[2]:getRxQueue(i - 1), args.dev[2], args.random[1] == 1)
+		mg.startTask("receive", ring1, args.dev[2]:getRxQueue(i - 1), args.dev[2], args.random == 1)
 		if args.dev[1] ~= args.dev[2] then
-			mg.startTask("receive", ring2, args.dev[1]:getRxQueue(i - 1), args.dev[1], args.random[1] == 1)
+			mg.startTask("receive", ring2, args.dev[1]:getRxQueue(i - 1), args.dev[1], args.random == 1)
 		end
 	end
 
