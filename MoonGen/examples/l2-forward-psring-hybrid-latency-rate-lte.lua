@@ -28,6 +28,11 @@ function configure(parser)
 	parser:option("-c --concealedloss", "Rate of concealed packet drops"):args(2):convert(tonumber):default({0,0})
 	parser:option("-u --catchuprate", "After a concealed loss, this rate will apply to the backed-up frames."):args(2):convert(tonumber):default({0,0})
 	parser:option("-y --random", "Manipulate the receiving time by adding [0-1]ms"):args(1):convert(tonumber):default(0)
+	parser:option("-s --short_DRX_cycle_length", "The short DRX cycle length in ms"):args(2):convert(tonumber):default({15,15})
+	parser:option("-g --long_DRX_cycle_length", "The long DRX cycle length in ms"):args(2):convert(tonumber):default({30,30})
+	parser:option("-a --active_time", "The active time from PDCCH in ms"):args(2):convert(tonumber):default({2,2})
+	parser:option("-f --continuous_reception_inactivity_timer", "The continous reception inactivity timer in ms"):args(2):convert(tonumber):default({200, 200})
+	parser:option("-i --rcc_idle_cycle_length", "The RCC IDLE cycle length in ms"):args(2):convert(tonumber):default({100, 100})
 	return parser:parse()
 end
 
@@ -111,7 +116,6 @@ function receive(ring, rxQueue, rxDev, randomON)
 		--print("receive thread count="..count)
 		for iix=1,count do
 
-			--local last_time = limiter:get_tsc_cycles() + (tsc_hz_ms * -math.log(math.random()))
 			local last_time = limiter:get_tsc_cycles() + (tsc_hz_ms * math.random())
 			while randomON and limiter:get_tsc_cycles() < last_time do
 				if not mg.running() then
@@ -163,7 +167,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	ns.inactive_long_DRX_cycle_thread1 = {0, 0}
 	ns.inactive_long_DRX_cycle_thread2 = {0, 0}
 
-	local tmp = limiter:get_tsc_cycles()
 
 	-- ns.inactive_time_short_DRX_cycle_thread1 = tmp
 	-- ns.inactive_time_short_DRX_cycle_thread2 = limiter:get_tsc_cycles()
@@ -191,11 +194,11 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local rcc_idle_cycle_length = 100 * tsc_hz_ms
 
 	local short_DRX_cycle_length = 15 * tsc_hz_ms
-	local long_DRX_cycle_length = 20 * tsc_hz_ms
+	local long_DRX_cycle_length = 35 * tsc_hz_ms
 
 	local active_time = 2 * tsc_hz_ms
 
-	local max_inactive_short_DRX_cycle = 2400 / (short_DRX_cycle_length / tsc_hz_ms)
+	local max_inactive_short_DRX_cycle = 2200 / (short_DRX_cycle_length / tsc_hz_ms)
 	local inactive_short_DRX_cycle_time = 2400 * tsc_hz_ms
 
 	local max_inactive_long_DRX_cycle = 8000 / (long_DRX_cycle_length / tsc_hz_ms)
@@ -437,19 +440,33 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			else
 				last_activity = limiter:get_tsc_cycles()
 
+				local packet_arrival_time = 0
+				local lcount = 0
+				time_stuck_in_loop = 0
+
 				-- time to wait
-				while limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length do
+				while limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length - active_time do
+					lcount = pipe:countPktsizedRing(ring.ring)
+					if (lcount > 0) and (packet_arrival_time == 0) then
+						packet_arrival_time = limiter:get_tsc_cycles()
+					end
 					if not mg.running() then
 						return
 					end
 				end
+
+				-- save the time the package waited
 				last_activity = limiter:get_tsc_cycles()
+				if (lcount > 0) then
+					time_stuck_in_loop = (last_activity-packet_arrival_time)
+				end
+
 				-- T_on is active
 				while limiter:get_tsc_cycles() < last_activity + active_time do
 					if not mg.running() then
 						return
 					end
-					-- count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
+
 					count = pipe:countPktsizedRing(ring.ring)
 
 					if count > 0 then
