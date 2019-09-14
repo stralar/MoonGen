@@ -162,6 +162,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
 	ns.short_DRX = true
 	ns.continuous_reception = false
+	-- TODO soll noch durch shared timestamps vereinfacht/verbessert werden
+	ns.continuous_reception_thread1 = true
+	ns.continuous_reception_thread2 = true
 	ns.inactive_short_DRX_cycle_thread1 = {0, 0}
 	ns.inactive_short_DRX_cycle_thread2 = {0, 0}
 	ns.inactive_long_DRX_cycle_thread1 = {0, 0}
@@ -261,11 +264,11 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				local send_time = arrival_timestamp
 				if (closses > 0) then
-					send_time = send_time + (((closses+1)*concealed_resend_time + latency + extraDelay) * tsc_hz_ms)
+					send_time = send_time + (((closses+1)*concealed_resend_time + latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
 				else
 					send_time = send_time + ((latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
-					time_stuck_in_loop = 0
 				end
+				time_stuck_in_loop = 0
 
 				local cur_time = limiter:get_tsc_cycles()
 				--print("timestamps", arrival_timestamp, send_time, cur_time)
@@ -295,7 +298,16 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				last_activity = limiter:get_tsc_cycles()
 			end
 
-			if limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
+			-- If both Threads timedout
+			if threadNumber == 1 and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
+				ns.continuous_reception_thread1 = false
+			end
+			if threadNumber == 2 and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
+				ns.continuous_reception_thread2 = false
+			end
+
+			if not ns.continuous_reception_thread1 and not ns.continuous_reception_thread2 then
+				-- and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
 
 				print("short_DRX activating "..threadNumber)
 				--ns.inactive_time_short_DRX_cycle_thread1 = limiter:get_tsc_cycles()
@@ -303,6 +315,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				print("continuous_reception deactivating "..threadNumber)
 				ns.continuous_reception = false
+
+				ns.continuous_reception_thread1 = true
+				ns.continuous_reception_thread2 = true
 			end
 
 			--DEBUG
