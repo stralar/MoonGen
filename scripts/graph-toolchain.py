@@ -212,6 +212,7 @@ class AverageDelay():
             for j in range(len(tmpAllData[i])):
                 #tmpData.append([tmpAllData[i][j][0] - tmpAllData[i][0][0], tmpAllData[i][j][2]])
                 tmpData.append([j, tmpAllData[i][j][2]])
+                #print(tmpAllData[i][j][2])
 
             self.data.append(tmpData)
 
@@ -263,6 +264,7 @@ class AverageDelay():
         plt.ylabel(self.yLabel)
 
         plt.yticks(self.boxLabelY)
+        #plt.ylim(top=0.1)
 
         plt.grid(ls=':', color='gray')
 
