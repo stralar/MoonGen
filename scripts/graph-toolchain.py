@@ -20,7 +20,7 @@ from operator import itemgetter
 
 parser = argparse.ArgumentParser(description='Programm create a PIF list')
 parser.add_argument('-n', '--name', help='Please give a Data path to the csv File, example: rnc-psr-tXX-r')
-parser.add_argument('-p', '--ping', help='Please give a Data path to the csv File, example: ping-psr-tXX')
+parser.add_argument('-p', '--ping', help='Please give a Data path to the csv File, example: ping-psr-tXX-i')
 
 
 args = parser.parse_args()
@@ -429,6 +429,7 @@ class CCDF():
         self.sum = []
         self.cdf = []
         self.ccdf = []
+        self.legend = []
 
         # Collect Data from pings
 
@@ -437,6 +438,7 @@ class CCDF():
         for file in sorted(glob.glob(filePathDetails)):
             print(file)
             self.data.append(np.sort(np.loadtxt(file, delimiter="\t")))
+            self.legend.append(file)
 
         print(len(self.data))
         #np.bincount(self.data)
@@ -472,7 +474,7 @@ class CCDF():
         plt.ylabel('CDF')
         plt.xlabel('RTT [s]')
 
-        plt.savefig(fileNamePing + "-cdf")
+        plt.savefig(fileNamePing + "-cdf.png")
 
         plt.close()
 
@@ -482,6 +484,8 @@ class CCDF():
         for val in self.data:
             plt.plot(val, 1 - (val.cumsum() / val.cumsum()[-1]))
 
+        plt.legend(self.legend)
+
 
         plt.yscale('log')
         #plt.xscale('log')
@@ -490,7 +494,7 @@ class CCDF():
         plt.ylabel('CCDF')
         plt.xlabel('RTT [s]')
 
-        plt.savefig(fileNamePing + self.fileSaveName)
+        plt.savefig(fileNamePing + self.fileSaveName + ".png")
 
         plt.close()
 
