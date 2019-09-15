@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-#destIPAdress="10.1.3.3"
-destIPAdress="localhost"
+destIPAdress="10.1.3.3"
+#destIPAdress="localhost"
 
 fileName="ping-psr-t08"
 
