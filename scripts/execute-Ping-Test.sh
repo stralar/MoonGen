@@ -1,17 +1,17 @@
 #!/bin/bash
 
 
-#destIPAdress="10.1.3.2"
+#destIPAdress="10.1.3.3"
 destIPAdress="localhost"
 
-fileName="ping-psr-t07"
+fileName="ping-psr-t08"
 
 
 # Paper 5 x 10³
-pingMaxCount=50
+pingMaxCount=500
 
 # in Seconds
-interPacketGap=(0.01 0.1 0.5 1.0) # 2.0 2.3 2.8 3.5 10.0 11.0 13.0)
+interPacketGap=(0.01 0.1 0.5 1.0 2.0 2.8 3.5 11.0 13.0)
 
 result=""
 

@@ -98,7 +98,7 @@ do
 
                 #moonGenTerminateCommand="sudo killall MoonGen"
                 #clientCommand="iperf3 -c $destIPAdress -t $iperfExecuteTime -u -b '$r'M -l 1.4K"
-                clientCommand="./rnc/rude/rude/rude -s rnc/rude/udp-1400-'$r'Mbps-2sec.cfg"
+                clientCommand="./MoonGen/rude/rude/rude -s MoonGen/rude/udp-1400-'$r'Mbps-2sec.cfg"
                 #dagCommand="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-l$l-q$q-t$t.erf"
                 dagCommand="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-t$t.erf"
 
