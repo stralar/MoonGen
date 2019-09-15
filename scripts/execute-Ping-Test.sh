@@ -11,9 +11,19 @@ fileName="ping-psr-t08"
 pingMaxCount=500
 
 # in Seconds
-interPacketGap=(0.01 0.1 0.5 1.0 2.0 2.8 3.5 11.0 13.0)
+interPacketGap=()
 
 result=""
+
+if [ $1 ]
+then
+    for time in "$@"
+    do
+        interPacketGap+=($time)
+    done
+else
+    interPacketGap+=(0.01 0.1 0.5 1.0 2.0 2.8 3.5 11.0 13.0)
+fi
 
 for (( i=0; i<${#interPacketGap[@]}; i++ ));
 do
@@ -49,4 +59,5 @@ do
     echo "Analysis from $outputFileName is Finished at $(date +%T)"
 
 done
+
 
