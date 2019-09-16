@@ -329,16 +329,30 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 		-- if the RCC_IDLE mode is active
 		elseif ns.rcc_idle then
 			last_activity = limiter:get_tsc_cycles()
-	
+
+			local packet_arrival_time = 0
+			local lcount = 0
+			time_stuck_in_loop = 0
+
 			-- time to wait
 			while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length - active_time do
+				lcount = pipe:countPktsizedRing(ring.ring)
+				if (lcount > 0) and (packet_arrival_time == 0) then
+					packet_arrival_time = limiter:get_tsc_cycles()
+				end
 				if not mg.running() then
 					return
 				end
 			end
 
+			-- save the time the package waited
+			last_activity = limiter:get_tsc_cycles()
+			if (lcount > 0) then
+				time_stuck_in_loop = (last_activity-packet_arrival_time)
+			end
+
 			-- T_on is active
-			while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length do
+			while limiter:get_tsc_cycles() < last_activity + active_time do
 				if not mg.running() then
 					return
 				end
