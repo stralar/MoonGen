@@ -170,11 +170,26 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	ns.inactive_long_DRX_cycle_thread1 = {0, 0}
 	ns.inactive_long_DRX_cycle_thread2 = {0, 0}
 
+	local tmp = limiter:get_tsc_cycles()
+	-- the 3 is the "ULL" ending
+	--local tmplength = string.len(tmp) - 3
 
-	-- ns.inactive_time_short_DRX_cycle_thread1 = tmp
-	-- ns.inactive_time_short_DRX_cycle_thread2 = limiter:get_tsc_cycles()
-	-- ns.inactive_time_long_DRX_cycle_thread1 = limiter:get_tsc_cycles()
-	-- ns.inactive_time_long_DRX_cycle_thread2 = limiter:get_tsc_cycles()
+	--tmp = string.sub(tmp, 0, tmplength)
+
+	--local tmpfirst = string.sub(tmp, 0, tmplength - 7)
+	--local tmpsecond = string.sub(tmp, tmplength - 6, tmplength)
+
+
+	--print("time "..tonumber(string.sub(tmp, 0, tmplength), Z).."first: "..(tonumber(tmpfirst) ).." secound: "..tonumber(tmpsecond))
+	print(tostring(tmp).." | "..string.format("%.5f", ullToNumber(tmp)))
+
+
+	ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(tmp)
+	ns.inactive_time_short_DRX_cycle_thread2 = ullToNumber(tmp)
+	ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(tmp)
+	ns.inactive_time_long_DRX_cycle_thread2 = limiter:get_tsc_cycles()
+	
+
 
 
 	ns.first_rcc_connected = false
@@ -547,6 +562,16 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			end
 		end
 	end
+end
+
+
+function ullToNumber(value)
+	
+	local vstring = tostring(value)
+	-- remove the "ULL" ending
+	vstring = string.sub(vstring, 0, string.len(vstring) - 3)
+
+	return tonumber(vstring)
 end
 
 
