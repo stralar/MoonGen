@@ -181,13 +181,17 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 
 	--print("time "..tonumber(string.sub(tmp, 0, tmplength), Z).."first: "..(tonumber(tmpfirst) ).." secound: "..tonumber(tmpsecond))
-	print(tostring(tmp).." | "..string.format("%.5f", ullToNumber(tmp)))
+	--print(tostring(tmp).." | "..string.format("%.5f", ullToNumber(tmp)))
+
+	print(tmp)
+	print((tmp + 123324) < ullToNumber(tmp))
 
 
 	ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(tmp)
 	ns.inactive_time_short_DRX_cycle_thread2 = ullToNumber(tmp)
 	ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(tmp)
 	ns.inactive_time_long_DRX_cycle_thread2 = ullToNumber(tmp)
+	ns.inactive_time_continuous_reception_thread1 = ullToNumber(tmp)
 	
 
 
@@ -311,22 +315,25 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
 
 				last_activity = limiter:get_tsc_cycles()
+				ns.inactive_time_continuous_reception_thread1 = ullToNumber(limiter:get_tsc_cycles())
 			end
 
 			-- If both Threads timedout
-			if threadNumber == 1 and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
-				ns.continuous_reception_thread1 = false
-			end
-			if threadNumber == 2 and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
-				ns.continuous_reception_thread2 = false
-			end
+			--if threadNumber == 1 and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
+			--	ns.continuous_reception_thread1 = false
+			--end
+			---if threadNumber == 2 and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
+			--	ns.continuous_reception_thread2 = false
+			--end
 
-			if not ns.continuous_reception_thread1 and not ns.continuous_reception_thread2 then
+			--if not ns.continuous_reception_thread1 and not ns.continuous_reception_thread2 then
 				-- and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
+			if limiter:get_tsc_cycles() > ns.inactive_time_continuous_reception_thread1 + continuous_reception_inactivity_timer then
 
 				print("short_DRX activating "..threadNumber)
-				--ns.inactive_time_short_DRX_cycle_thread1 = limiter:get_tsc_cycles()
+				ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
 				ns.short_DRX = true
+
 
 				print("continuous_reception deactivating "..threadNumber)
 				ns.continuous_reception = false
@@ -463,17 +470,14 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				-- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
 				--if ns.inactive_short_DRX_cycle_thread1[threadNumber] >= max_inactive_short_DRX_cycle
 				--	or ns.inactive_short_DRX_cycle_thread2[threadNumber] >= max_inactive_short_DRX_cycle then
-				if ns.inactive_time_short_DRX_cycle_thread1 > limiter:get_tsc_cycles() + inactive_short_DRX_cycle_time then
+				if limiter:get_tsc_cycles() > ns.inactive_time_short_DRX_cycle_thread1 + inactive_short_DRX_cycle_time then
 						--and ns.inactive_time_short_DRX_cycle_thread2 > limiter:get_tsc_cycles() + inactive_short_DRX_cycle_time then
 					print("short_DRX deactivating after inactive time, "..threadNumber)
 					ns.inactive_short_DRX_cycle_thread1 = {0, 0}
 					ns.inactive_short_DRX_cycle_thread2 = {0, 0}
 
-					ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
-					--ns.inactive_time_short_DRX_cycle_thread2 = ullToNumber(limiter:get_tsc_cycles())
-
-
 					ns.short_DRX = false
+					ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
 
 					print("long_DRX activating after inactive time, "..threadNumber)
 				end
@@ -525,28 +529,32 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 					end
 					if ns.continuous_reception then
-						ns.inactive_long_DRX_cycle_thread1 = {0, 0}
-						ns.inactive_long_DRX_cycle_thread2 = {0, 0}
+						--ns.inactive_long_DRX_cycle_thread1 = {0, 0}
+						--ns.inactive_long_DRX_cycle_thread2 = {0, 0}
+						ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
 						break
 					end
 				end
 
-				if not ns.continuous_reception and threadNumber == 1 then
-					ns.inactive_long_DRX_cycle_thread1 =  {ns.inactive_long_DRX_cycle_thread1[1] + 1, ns.inactive_long_DRX_cycle_thread2[2]}
-				end
-				if not ns.continuous_reception and threadNumber == 2 then
-					ns.inactive_long_DRX_cycle_thread2 =  {ns.inactive_long_DRX_cycle_thread1[1], ns.inactive_long_DRX_cycle_thread2[2] + 1}
-				end
+				--if not ns.continuous_reception and threadNumber == 1 then
+				--	ns.inactive_long_DRX_cycle_thread1 =  {ns.inactive_long_DRX_cycle_thread1[1] + 1, ns.inactive_long_DRX_cycle_thread2[2]}
+				--end
+				--if not ns.continuous_reception and threadNumber == 2 then
+				--	ns.inactive_long_DRX_cycle_thread2 =  {ns.inactive_long_DRX_cycle_thread1[1], ns.inactive_long_DRX_cycle_thread2[2] + 1}
+				--end
 
 
 
 				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
-				if ns.inactive_long_DRX_cycle_thread1[threadNumber] >= max_inactive_long_DRX_cycle
-					or ns.inactive_long_DRX_cycle_thread2[threadNumber] >= max_inactive_long_DRX_cycle then
+				--if ns.inactive_long_DRX_cycle_thread1[threadNumber] >= max_inactive_long_DRX_cycle
+				--	or ns.inactive_long_DRX_cycle_thread2[threadNumber] >= max_inactive_long_DRX_cycle then
+				if limiter:get_tsc_cycles() > ns.inactive_time_long_DRX_cycle_thread1 + inactive_long_DRX_cycle_time then
 					print("long_DRX deactivating after inactive time, "..threadNumber)
 					ns.inactive_long_DRX_cycle_thread1 = {0, 0}
 					ns.inactive_long_DRX_cycle_thread2 = {0, 0}
 					ns.short_DRX = true
+
+					ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
 
 					print("rcc_idle activating after inactive time, "..threadNumber)
 					ns.rcc_idle = true
