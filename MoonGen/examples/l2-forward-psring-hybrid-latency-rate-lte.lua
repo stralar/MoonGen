@@ -187,7 +187,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(tmp)
 	ns.inactive_time_short_DRX_cycle_thread2 = ullToNumber(tmp)
 	ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(tmp)
-	ns.inactive_time_long_DRX_cycle_thread2 = limiter:get_tsc_cycles()
+	ns.inactive_time_long_DRX_cycle_thread2 = ullToNumber(tmp)
 	
 
 
@@ -443,32 +443,35 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 					end
 					if ns.continuous_reception then
-						ns.inactive_short_DRX_cycle_thread1 = {0, 0}
-						ns.inactive_short_DRX_cycle_thread2 = {0, 0}
-						--ns.inactive_time_short_DRX_cycle_thread1 = limiter:get_tsc_cycles()
+						--ns.inactive_short_DRX_cycle_thread1 = {0, 0}
+						--ns.inactive_short_DRX_cycle_thread2 = {0, 0}
+						ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
 				
 						break
 					end
 				end
 
-				if not ns.continuous_reception and threadNumber == 1 then
-					ns.inactive_short_DRX_cycle_thread1 =  {ns.inactive_short_DRX_cycle_thread1[1] + 1, ns.inactive_short_DRX_cycle_thread2[2]}
-				end
-				if not ns.continuous_reception and threadNumber == 2 then
-					ns.inactive_short_DRX_cycle_thread2 =  {ns.inactive_short_DRX_cycle_thread1[1], ns.inactive_short_DRX_cycle_thread2[2] + 1}
-				end
+				--if not ns.continuous_reception and threadNumber == 1 then
+				--	ns.inactive_short_DRX_cycle_thread1 =  {ns.inactive_short_DRX_cycle_thread1[1] + 1, ns.inactive_short_DRX_cycle_thread2[2]}
+				--end
+				--if not ns.continuous_reception and threadNumber == 2 then
+				--	ns.inactive_short_DRX_cycle_thread2 =  {ns.inactive_short_DRX_cycle_thread1[1], ns.inactive_short_DRX_cycle_thread2[2] + 1}
+				--end
 
 
 
 				-- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
-				 if ns.inactive_short_DRX_cycle_thread1[threadNumber] >= max_inactive_short_DRX_cycle 
-					or ns.inactive_short_DRX_cycle_thread2[threadNumber] >= max_inactive_short_DRX_cycle then
-				-- if ns.inactive_time_short_DRX_cycle_thread1 > limiter:get_tsc_cycles() + inactive_short_DRX_cycle_time then
+				--if ns.inactive_short_DRX_cycle_thread1[threadNumber] >= max_inactive_short_DRX_cycle
+				--	or ns.inactive_short_DRX_cycle_thread2[threadNumber] >= max_inactive_short_DRX_cycle then
+				if ns.inactive_time_short_DRX_cycle_thread1 > limiter:get_tsc_cycles() + inactive_short_DRX_cycle_time then
+						--and ns.inactive_time_short_DRX_cycle_thread2 > limiter:get_tsc_cycles() + inactive_short_DRX_cycle_time then
 					print("short_DRX deactivating after inactive time, "..threadNumber)
 					ns.inactive_short_DRX_cycle_thread1 = {0, 0}
 					ns.inactive_short_DRX_cycle_thread2 = {0, 0}
 
-					--ns.inactive_time_short_DRX_cycle_thread1 = limiter:get_tsc_cycles()
+					ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
+					--ns.inactive_time_short_DRX_cycle_thread2 = ullToNumber(limiter:get_tsc_cycles())
+
 
 					ns.short_DRX = false
 
@@ -564,7 +567,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	end
 end
 
-
+-- Help function:
+-- cast a uint64_i to "lua number"
 function ullToNumber(value)
 	
 	local vstring = tostring(value)
