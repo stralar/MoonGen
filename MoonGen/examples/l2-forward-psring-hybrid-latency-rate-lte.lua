@@ -162,38 +162,14 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
 	ns.short_DRX = true
 	ns.continuous_reception = false
-	-- TODO soll noch durch shared timestamps vereinfacht/verbessert werden
-	ns.continuous_reception_thread1 = true
-	ns.continuous_reception_thread2 = true
-	ns.inactive_short_DRX_cycle_thread1 = {0, 0}
-	ns.inactive_short_DRX_cycle_thread2 = {0, 0}
-	ns.inactive_long_DRX_cycle_thread1 = {0, 0}
-	ns.inactive_long_DRX_cycle_thread2 = {0, 0}
 
-	local tmp = limiter:get_tsc_cycles()
-	-- the 3 is the "ULL" ending
-	--local tmplength = string.len(tmp) - 3
-
-	--tmp = string.sub(tmp, 0, tmplength)
-
-	--local tmpfirst = string.sub(tmp, 0, tmplength - 7)
-	--local tmpsecond = string.sub(tmp, tmplength - 6, tmplength)
-
-
-	--print("time "..tonumber(string.sub(tmp, 0, tmplength), Z).."first: "..(tonumber(tmpfirst) ).." secound: "..tonumber(tmpsecond))
-	--print(tostring(tmp).." | "..string.format("%.5f", ullToNumber(tmp)))
-
-	print(tmp)
-	print((tmp + 123324) < ullToNumber(tmp))
-
-
-	ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(tmp)
-	ns.inactive_time_short_DRX_cycle_thread2 = ullToNumber(tmp)
-	ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(tmp)
-	ns.inactive_time_long_DRX_cycle_thread2 = ullToNumber(tmp)
-	ns.inactive_time_continuous_reception_thread1 = ullToNumber(tmp)
+	ns.inactive_time_short_DRX_cycle = ullToNumber(tmp)
+	ns.inactive_time_long_DRX_cycle = ullToNumber(tmp)
+	ns.inactive_time_continuous_reception_cycle = ullToNumber(tmp)
 	
-
+	local continuous_reception_inactivity_time_ms = 200
+	local inactive_short_DRX_cycle_time_ms = 2500
+	local inactive_long_DRX_cycle_time_ms = 10500
 
 
 	ns.first_rcc_connected = false
@@ -220,15 +196,13 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 	local active_time = 2 * tsc_hz_ms
 
-	local max_inactive_short_DRX_cycle = 2200 / (short_DRX_cycle_length / tsc_hz_ms)
-	local inactive_short_DRX_cycle_time = 2400 * tsc_hz_ms
-
-	local max_inactive_long_DRX_cycle = 8000 / (long_DRX_cycle_length / tsc_hz_ms)
-	local inactive_long_DRX_cycle_time = 10000 * tsc_hz_ms
-
 	-- will be reset after each send/received package
 	-- timer is between 1ms - 2.56sec Paper-[10]
-	local continuous_reception_inactivity_timer = 200 * tsc_hz_ms
+	local inactive_continuous_reception_cycle_time = continuous_reception_inactivity_time_ms * tsc_hz_ms
+
+	local inactive_short_DRX_cycle_time = (inactive_short_DRX_cycle_time_ms - continuous_reception_inactivity_time_ms) * tsc_hz_ms
+
+	local inactive_long_DRX_cycle_time = (inactive_long_DRX_cycle_time_ms - inactive_short_DRX_cycle_time_ms) * tsc_hz_ms
 
 	-- 16 to 19 signalling messages
 	local rcc_connection_build_delay = 50 * tsc_hz_ms
@@ -315,31 +289,17 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
 
 				last_activity = limiter:get_tsc_cycles()
-				ns.inactive_time_continuous_reception_thread1 = ullToNumber(limiter:get_tsc_cycles())
+				ns.inactive_time_continuous_reception_cycle = ullToNumber(limiter:get_tsc_cycles())
 			end
 
-			-- If both Threads timedout
-			--if threadNumber == 1 and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
-			--	ns.continuous_reception_thread1 = false
-			--end
-			---if threadNumber == 2 and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
-			--	ns.continuous_reception_thread2 = false
-			--end
-
-			--if not ns.continuous_reception_thread1 and not ns.continuous_reception_thread2 then
-				-- and limiter:get_tsc_cycles() > last_activity + continuous_reception_inactivity_timer then
-			if limiter:get_tsc_cycles() > ns.inactive_time_continuous_reception_thread1 + continuous_reception_inactivity_timer then
+			if limiter:get_tsc_cycles() > ns.inactive_time_continuous_reception_cycle + inactive_continuous_reception_cycle_time then
 
 				print("short_DRX activating "..threadNumber)
-				ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
+				ns.inactive_time_short_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
 				ns.short_DRX = true
-
 
 				print("continuous_reception deactivating "..threadNumber)
 				ns.continuous_reception = false
-
-				ns.continuous_reception_thread1 = true
-				ns.continuous_reception_thread2 = true
 			end
 
 			--DEBUG
@@ -398,9 +358,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 			end
 
-
-
-
 			-- DEBUG
 			if not ns.rcc_idle and ns.continuous_reception and debug then
 				print("rcc_idle deactivate "..threadNumber)
@@ -449,35 +406,19 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 						ns.continuous_reception = true
 
 					end
+					-- Reset the short DRX inactive timer and go to continuous reception
 					if ns.continuous_reception then
-						--ns.inactive_short_DRX_cycle_thread1 = {0, 0}
-						--ns.inactive_short_DRX_cycle_thread2 = {0, 0}
-						ns.inactive_time_short_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
-				
+						ns.inactive_time_short_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
 						break
 					end
 				end
 
-				--if not ns.continuous_reception and threadNumber == 1 then
-				--	ns.inactive_short_DRX_cycle_thread1 =  {ns.inactive_short_DRX_cycle_thread1[1] + 1, ns.inactive_short_DRX_cycle_thread2[2]}
-				--end
-				--if not ns.continuous_reception and threadNumber == 2 then
-				--	ns.inactive_short_DRX_cycle_thread2 =  {ns.inactive_short_DRX_cycle_thread1[1], ns.inactive_short_DRX_cycle_thread2[2] + 1}
-				--end
-
-
-
 				-- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
-				--if ns.inactive_short_DRX_cycle_thread1[threadNumber] >= max_inactive_short_DRX_cycle
-				--	or ns.inactive_short_DRX_cycle_thread2[threadNumber] >= max_inactive_short_DRX_cycle then
-				if limiter:get_tsc_cycles() > ns.inactive_time_short_DRX_cycle_thread1 + inactive_short_DRX_cycle_time then
-						--and ns.inactive_time_short_DRX_cycle_thread2 > limiter:get_tsc_cycles() + inactive_short_DRX_cycle_time then
+				if limiter:get_tsc_cycles() > ns.inactive_time_short_DRX_cycle + inactive_short_DRX_cycle_time then
 					print("short_DRX deactivating after inactive time, "..threadNumber)
-					ns.inactive_short_DRX_cycle_thread1 = {0, 0}
-					ns.inactive_short_DRX_cycle_thread2 = {0, 0}
 
 					ns.short_DRX = false
-					ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
+					ns.inactive_time_long_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
 
 					print("long_DRX activating after inactive time, "..threadNumber)
 				end
@@ -528,33 +469,19 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 						ns.continuous_reception = true
 
 					end
+					-- Reset the short DRX inactive timer and go to continuous reception
 					if ns.continuous_reception then
-						--ns.inactive_long_DRX_cycle_thread1 = {0, 0}
-						--ns.inactive_long_DRX_cycle_thread2 = {0, 0}
-						ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
+						ns.inactive_time_long_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
 						break
 					end
 				end
 
-				--if not ns.continuous_reception and threadNumber == 1 then
-				--	ns.inactive_long_DRX_cycle_thread1 =  {ns.inactive_long_DRX_cycle_thread1[1] + 1, ns.inactive_long_DRX_cycle_thread2[2]}
-				--end
-				--if not ns.continuous_reception and threadNumber == 2 then
-				--	ns.inactive_long_DRX_cycle_thread2 =  {ns.inactive_long_DRX_cycle_thread1[1], ns.inactive_long_DRX_cycle_thread2[2] + 1}
-				--end
-
-
-
 				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
-				--if ns.inactive_long_DRX_cycle_thread1[threadNumber] >= max_inactive_long_DRX_cycle
-				--	or ns.inactive_long_DRX_cycle_thread2[threadNumber] >= max_inactive_long_DRX_cycle then
-				if limiter:get_tsc_cycles() > ns.inactive_time_long_DRX_cycle_thread1 + inactive_long_DRX_cycle_time then
+				if limiter:get_tsc_cycles() > ns.inactive_time_long_DRX_cycle + inactive_long_DRX_cycle_time then
 					print("long_DRX deactivating after inactive time, "..threadNumber)
-					ns.inactive_long_DRX_cycle_thread1 = {0, 0}
-					ns.inactive_long_DRX_cycle_thread2 = {0, 0}
 					ns.short_DRX = true
 
-					ns.inactive_time_long_DRX_cycle_thread1 = ullToNumber(limiter:get_tsc_cycles())
+					ns.inactive_time_long_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
 
 					print("rcc_idle activating after inactive time, "..threadNumber)
 					ns.rcc_idle = true
