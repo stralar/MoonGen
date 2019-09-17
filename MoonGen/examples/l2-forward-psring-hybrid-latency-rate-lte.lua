@@ -163,9 +163,11 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	ns.short_DRX = true
 	ns.continuous_reception = false
 
-	ns.inactive_time_short_DRX_cycle = ullToNumber(tmp)
-	ns.inactive_time_long_DRX_cycle = ullToNumber(tmp)
-	ns.inactive_time_continuous_reception_cycle = ullToNumber(tmp)
+	local last_activity = limiter:get_tsc_cycles()
+
+	ns.inactive_time_short_DRX_cycle = ullToNumber(last_activity)
+	ns.inactive_time_long_DRX_cycle = ullToNumber(last_activity)
+	ns.inactive_time_continuous_reception_cycle = ullToNumber(last_activity)
 	
 	local continuous_reception_inactivity_time_ms = 200
 	local inactive_short_DRX_cycle_time_ms = 2500
@@ -186,7 +188,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- catch-up at line rate
 	local catchup_mode = false
 
-	local last_activity = limiter:get_tsc_cycles()
 
 	-- between 0.32 and 2.56 sec
 	local rcc_idle_cycle_length = 100 * tsc_hz_ms
