@@ -10,7 +10,7 @@ dagPC="stratmann@130.75.73.131"
 
 
 downlink=false
-testNumber="08"
+testNumber="09"
 
 destIPAdress="10.1.3.2"
 
@@ -30,7 +30,7 @@ else
     testName="rnc-psr-uplink-t$testNumber-"
 fi
 
-iperfExecuteTime="2"
+iperfExecuteTime="4"
 dagExecuteTime=$((iperfExecuteTime + 5))
 moonGenExecuteTime=$((dagExecuteTime + 5))
 #waitTime=$((moonGenExecuteTime))
@@ -66,7 +66,7 @@ ssh $clientPC 'sudo killall rude' &
 sleep 1
 
 
-moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l 30 10 -q 280 1100"
+moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 40 -l 30 10 -q 290 1100"
 moonGenTerminateCommand="sudo killall MoonGen"
 
 ssh $moonGenPC $moonGenMainCommand &
@@ -98,7 +98,7 @@ do
 
                 #moonGenTerminateCommand="sudo killall MoonGen"
                 #clientCommand="iperf3 -c $destIPAdress -t $iperfExecuteTime -u -b '$r'M -l 1.4K"
-                clientCommand="./MoonGen/rude/rude/rude -s MoonGen/rude/udp-1400-'$r'Mbps-2sec.cfg"
+                clientCommand="./MoonGen/rude/rude/rude -s MoonGen/rude/udp-1400-'$r'Mbps-4sec.cfg"
                 #dagCommand="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-l$l-q$q-t$t.erf"
                 dagCommand="sudo dagsnap -s $dagExecuteTime -d0 -v -o '$testName'r$r-t$t.erf"
 
