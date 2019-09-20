@@ -377,10 +377,15 @@ def pcktInFlyFirstSendUDP():
 
 
     csvArray = []
+    startTimeStamp = None
     with open(filePath, 'r') as csvDataFile:
         csvReader = csv.reader(csvDataFile, delimiter='\t')
         for row in csvReader:
-            csvArray.append(row)
+            if startTimeStamp == None:
+                startTimeStamp = float(row[1])
+
+            if (float(row[1]) - startTimeStamp >= 1 and float(row[1]) - startTimeStamp <= 3.1):
+                csvArray.append(row)
 
     resultWritePackage = open(fileSaveNamePckt, 'w')
     resultWriteByte = open(fileSaveNameByte, 'w')
@@ -613,10 +618,15 @@ def bandwidthUDP():
 
 
     csvArray = []
+    startTimeStamp = None
     with open(filePath, 'r') as csvDataFile:
         csvReader = csv.reader(csvDataFile, delimiter='\t')
         for row in csvReader:
-            csvArray.append(row)
+            if startTimeStamp == None:
+                startTimeStamp = float(row[1])
+
+            if (float(row[1]) - startTimeStamp >= 1 and float(row[1]) - startTimeStamp <= 3.1):
+                csvArray.append(row)
 
     resultWriteBandwidth = open(fileSaveNameBandwidth, 'w')
 
