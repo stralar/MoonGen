@@ -28,11 +28,14 @@ function configure(parser)
 	parser:option("-c --concealedloss", "Rate of concealed packet drops"):args(2):convert(tonumber):default({0,0})
 	parser:option("-u --catchuprate", "After a concealed loss, this rate will apply to the backed-up frames."):args(2):convert(tonumber):default({0,0})
 	parser:option("-y --random", "Manipulate the receiving time by adding [0-1]ms"):args(1):convert(tonumber):default(0)
-	parser:option("-s --short_DRX_cycle_length", "The short DRX cycle length in ms"):args(2):convert(tonumber):default({15,15})
-	parser:option("-g --long_DRX_cycle_length", "The long DRX cycle length in ms"):args(2):convert(tonumber):default({30,30})
-	parser:option("-a --active_time", "The active time from PDCCH in ms"):args(2):convert(tonumber):default({2,2})
-	parser:option("-f --continuous_reception_inactivity_timer", "The continous reception inactivity timer in ms"):args(2):convert(tonumber):default({200, 200})
-	parser:option("-i --rcc_idle_cycle_length", "The RCC IDLE cycle length in ms"):args(2):convert(tonumber):default({100, 100})
+	parser:option("--short_DRX_cycle_length", "The short DRX cycle length in ms"):args(1):convert(tonumber):default(15)
+	parser:option("--long_DRX_cycle_length", "The long DRX cycle length in ms"):args(1):convert(tonumber):default(30)
+	parser:option("--active_time", "The active time from PDCCH in ms"):args(1):convert(tonumber):default(2)
+	parser:option("--continuous_reception_inactivity_timer", "The continous reception inactivity timer in ms"):args(1):convert(tonumber):default(200)
+	parser:option("--short_DRX_inactivity_timer", "The short DRX inactivity timer in ms"):args(1):convert(tonumber):default(2500)
+	parser:option("--long_DRX_inactivity_timer", "The long DRX inactivity timer in ms"):args(1):convert(tonumber):default(10500)
+	parser:option("--rcc_idle_cycle_length", "The RCC IDLE cycle length in ms"):args(1):convert(tonumber):default(100)
+	parser:option("--rcc_connection_build_delay", "The Delay from RCC_IDLE to RCC_CONNECT in ms"):args(1):convert(tonumber):default(50)
 	return parser:parse()
 end
 
@@ -80,9 +83,12 @@ function master(args)
 
 	-- start the forwarding tasks
 	for i = 1, args.threads do
-		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1])
+		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1],
+			args.short_DRX_cycle_length, args.long_DRX_cycle_length, args.active_time, args.continuous_reception_inactivity_timer, args.short_DRX_inactivity_timer, args.long_DRX_inactivity_timer, args.rcc_idle_cycle_length, args.rcc_connection_build_delay)
 		if args.dev[1] ~= args.dev[2] then
-			mg.startTask("forward", 2, ns, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2])
+			mg.startTask("forward", 2, ns, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2],
+					args.short_DRX_cycle_length, args.long_DRX_cycle_length, args.active_time, args.continuous_reception_inactivity_timer, args.short_DRX_inactivity_timer, args.long_DRX_inactivity_timer, args.rcc_idle_cycle_length, args.rcc_connection_build_delay)
+
 		end
 	end
 
@@ -141,7 +147,8 @@ function receive(ring, rxQueue, rxDev, randomON)
 	ringsize_hist:save("rxq-ringsize-distribution-histogram-"..rxDev["id"]..".csv")
 end
 
-function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate)
+function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate,
+				 short_DRX_cycle_length, long_DRX_cycle_length, active_time, continuous_reception_inactivity_timer, short_DRX_inactivity_timer, long_DRX_inactivity_timer, rcc_idle_cycle_length, rcc_connection_build_delay)
 	print("forward with rate "..rate.." and latency "..latency.." and loss rate "..lossrate.." and clossrate "..clossrate.." and catchuprate "..catchuprate)
 	local numThreads = 1
 
@@ -169,9 +176,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	ns.inactive_time_long_DRX_cycle = ullToNumber(last_activity)
 	ns.inactive_time_continuous_reception_cycle = ullToNumber(last_activity)
 	
-	local continuous_reception_inactivity_time_ms = 200
-	local inactive_short_DRX_cycle_time_ms = 2500
-	local inactive_long_DRX_cycle_time_ms = 10500
+	--local continuous_reception_inactivity_time_ms = 200
+	--local inactive_short_DRX_cycle_time_ms = 2500
+	--local inactive_long_DRX_cycle_time_ms = 10500
 
 
 	ns.first_rcc_connected = false
@@ -190,23 +197,23 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 
 	-- between 0.32 and 2.56 sec
-	local rcc_idle_cycle_length = 100 * tsc_hz_ms
+	local rcc_idle_cycle_length_tsc_hz_ms = rcc_idle_cycle_length * tsc_hz_ms
 
-	local short_DRX_cycle_length = 15 * tsc_hz_ms
-	local long_DRX_cycle_length = 35 * tsc_hz_ms
+	local short_DRX_cycle_length_tsc_hz_ms = short_DRX_cycle_length * tsc_hz_ms
+	local long_DRX_cycle_length_tsc_hz_ms = long_DRX_cycle_length * tsc_hz_ms
 
-	local active_time = 2 * tsc_hz_ms
+	local active_time_tsc_hz_ms = active_time * tsc_hz_ms
 
 	-- will be reset after each send/received package
 	-- timer is between 1ms - 2.56sec Paper-[10]
-	local inactive_continuous_reception_cycle_time = continuous_reception_inactivity_time_ms * tsc_hz_ms
+	local inactive_continuous_reception_cycle_time = continuous_reception_inactivity_timer * tsc_hz_ms
 
-	local inactive_short_DRX_cycle_time = (inactive_short_DRX_cycle_time_ms - continuous_reception_inactivity_time_ms) * tsc_hz_ms
+	local inactive_short_DRX_cycle_time = (short_DRX_inactivity_timer - continuous_reception_inactivity_timer) * tsc_hz_ms
 
-	local inactive_long_DRX_cycle_time = (inactive_long_DRX_cycle_time_ms - inactive_short_DRX_cycle_time_ms) * tsc_hz_ms
+	local inactive_long_DRX_cycle_time = (long_DRX_inactivity_timer - short_DRX_inactivity_timer) * tsc_hz_ms
 
 	-- 16 to 19 signalling messages
-	local rcc_connection_build_delay = 50 * tsc_hz_ms
+	local rcc_connection_build_delay_tsc_hz_ms = rcc_connection_build_delay * tsc_hz_ms
 
 	-- in ms
 	local concealed_resend_time = 8
@@ -219,7 +226,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 		if ns.first_rcc_connected then
 			print("Build RCC_CONNECTION")
 			last_activity = limiter:get_tsc_cycles()
-			while limiter:get_tsc_cycles() < last_activity + rcc_connection_build_delay do
+			while limiter:get_tsc_cycles() < last_activity + rcc_connection_build_delay_tsc_hz_ms do
 				if not mg.running() then
 					return
 				end
@@ -318,7 +325,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			time_stuck_in_loop = 0
 
 			-- time to wait
-			while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length - active_time do
+			while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
 				lcount = pipe:countPktsizedRing(ring.ring)
 				if (lcount > 0) and (packet_arrival_time == 0) then
 					packet_arrival_time = limiter:get_tsc_cycles()
@@ -335,7 +342,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			end
 
 			-- T_on is active
-			while limiter:get_tsc_cycles() < last_activity + active_time do
+			while limiter:get_tsc_cycles() < last_activity + active_time_tsc_hz_ms do
 				if not mg.running() then
 					return
 				end
@@ -375,7 +382,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				time_stuck_in_loop = 0
 
 				-- time to wait
-				while limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length - active_time do
+				while limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
 					lcount = pipe:countPktsizedRing(ring.ring)
 					if (lcount > 0) and (packet_arrival_time == 0) then
 						packet_arrival_time = limiter:get_tsc_cycles()
@@ -392,7 +399,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 
 				-- T_on is active
-				while limiter:get_tsc_cycles() < last_activity + active_time do
+				while limiter:get_tsc_cycles() < last_activity + active_time_tsc_hz_ms do
 					if not mg.running() then
 						return
 					end
@@ -438,7 +445,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				time_stuck_in_loop = 0
 
 				-- time to wait
-				while limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length - active_time do
+				while limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
 					lcount = pipe:countPktsizedRing(ring.ring)
 					if (lcount > 0) and (packet_arrival_time == 0) then
 						packet_arrival_time = limiter:get_tsc_cycles()
@@ -455,7 +462,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 
 				-- T_on is active
-				while limiter:get_tsc_cycles() < last_activity + active_time do
+				while limiter:get_tsc_cycles() < last_activity + active_time_tsc_hz_ms do
 					if not mg.running() then
 						return
 					end
