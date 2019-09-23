@@ -22,7 +22,7 @@ then
         interPacketGap+=($time)
     done
 else
-    interPacketGap+=(0.01 0.1 0.5 1.0 2.0 2.8 3.5 11.0 13.0)
+    interPacketGap+=(0.01 0.1 0.4 2.3 2.7 10.0 10.7 11.0)
 fi
 
 for (( i=0; i<${#interPacketGap[@]}; i++ ));

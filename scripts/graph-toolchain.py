@@ -472,9 +472,9 @@ class CCDF():
 
         plt.ylim([0,1])
         plt.ylabel('CDF')
-        plt.xlabel('RTT [s]')
+        plt.xlabel('RTT [ms]')
 
-        plt.savefig(fileNamePing + "-cdf.png")
+        #plt.savefig(fileNamePing + "-cdf.png")
 
         plt.close()
 
@@ -488,7 +488,11 @@ class CCDF():
 
 
         plt.yscale('log')
-        #plt.xscale('log')
+        plt.ylim(0.01, 1)
+        plt.xlim(0, 200)
+
+        plt.grid(ls=':', color='gray')
+
 
 
         plt.ylabel('CCDF')
