@@ -10,7 +10,7 @@ dagPC="stratmann@130.75.73.131"
 
 
 downlink=true
-testNumber="10"
+testNumber="11"
 
 destIPAdress="10.1.3.2"
 
@@ -66,7 +66,7 @@ ssh $clientPC 'sudo killall rude' &
 sleep 1
 
 
-moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 35 -l 30 10 -q 350 1100 --short_DRX_cycle_length 8 --long_DRX_cycle_length 12 --active_time 1"
+moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 38 -l 30 10 -q 350 1100 --short_DRX_cycle_length 8 --long_DRX_cycle_length 12 --active_time 1"
 moonGenTerminateCommand="sudo killall MoonGen"
 
 ssh $moonGenPC $moonGenMainCommand &
