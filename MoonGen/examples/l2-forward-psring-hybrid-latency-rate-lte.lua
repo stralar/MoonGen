@@ -460,6 +460,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 					print("long_DRX deactivating "..threadNumber)
 					ns.long_DRX = false
 
+					print((limiter:get_tsc_cycles() - ns.last_package_time) / 1000)
+
 					print("continuous_reception activating "..threadNumber)
 					ns.continuous_reception = true
 
