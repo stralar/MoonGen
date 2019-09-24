@@ -167,7 +167,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	ns.rcc_idle = true
 
 	-- the RRC_CONNECTED mode got the short DRX cycle and long DRX cycle
-	ns.short_DRX = true
+	ns.short_DRX = false
+	ns.long_DRX = false
 	ns.continuous_reception = false
 
 	local last_activity = limiter:get_tsc_cycles()
@@ -176,7 +177,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	ns.inactive_time_long_DRX_cycle = ullToNumber(last_activity)
 	ns.inactive_time_continuous_reception_cycle = ullToNumber(last_activity)
 	ns.last_package_time = ullToNumber(last_activity)
-	
+
 	--local continuous_reception_inactivity_time_ms = 200
 	--local inactive_short_DRX_cycle_time_ms = 2500
 	--local inactive_long_DRX_cycle_time_ms = 10500
@@ -229,7 +230,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 		--print("top of loop")
 		-- RCC_IDLE to RCC_CONNECTED the delay
 		if ns.first_rcc_connected then
-			print("Build RCC_CONNECTION")
+			print("Build RCC_CONNECTION "..threadNumber)
 			last_activity = limiter:get_tsc_cycles()
 			while limiter:get_tsc_cycles() < last_activity + rcc_connection_build_delay_tsc_hz_ms do
 				if not mg.running() then
@@ -301,23 +302,21 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				-- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
 				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
 
-				-- last_activity = limiter:get_tsc_cycles()
-				-- ns.inactive_time_continuous_reception_cycle = ullToNumber(limiter:get_tsc_cycles())
 				ns.last_package_time = ullToNumber(limiter:get_tsc_cycles())
 			end
 
 			if limiter:get_tsc_cycles() > ns.last_package_time + inactive_continuous_reception_cycle_time then
 
-				print("short_DRX activating "..threadNumber)
-				-- ns.inactive_time_short_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
-				ns.short_DRX = true
-
 				print("continuous_reception deactivating "..threadNumber)
 				ns.continuous_reception = false
+
+				print("short_DRX activating "..threadNumber)
+				ns.short_DRX = true
 			end
+		end
 
 		-- if the RCC_IDLE mode is active
-		elseif ns.rcc_idle then
+		if ns.rcc_idle then
 			last_activity = limiter:get_tsc_cycles()
 
 			local packet_arrival_time = 0
@@ -350,142 +349,128 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				if count > 0 then
 
-					print("continuous_reception activating "..threadNumber)
-					ns.continuous_reception = true
-
 					print("rcc_idle deactivating "..threadNumber)
 					ns.rcc_idle = false
 
-					ns.first_rcc_connected = true
-				end
+					print("continuous_reception activating "..threadNumber)
+					ns.continuous_reception = true
 
-				if ns.continuous_reception then
+					ns.first_rcc_connected = true
+
+					break
+				end
+			end
+		end
+
+		-- RCC_CONNECTED short_DRX
+		if ns.short_DRX then
+
+			last_activity = limiter:get_tsc_cycles()
+
+			local packet_arrival_time = 0
+			local lcount = 0
+			time_stuck_in_loop = 0
+
+			-- time to wait
+			while limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
+				lcount = pipe:countPktsizedRing(ring.ring)
+				if (lcount > 0) and (packet_arrival_time == 0) then
+					packet_arrival_time = limiter:get_tsc_cycles()
+				end
+				if not mg.running() then
+					return
+				end
+			end
+
+			-- save the time the package waited
+			last_activity = limiter:get_tsc_cycles()
+			if (lcount > 0) then
+				time_stuck_in_loop = (last_activity-packet_arrival_time)
+			end
+
+			-- T_on is active
+			while limiter:get_tsc_cycles() < last_activity + active_time_tsc_hz_ms do
+				if not mg.running() then
+					return
+				end
+				-- count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
+				count = pipe:countPktsizedRing(ring.ring)
+
+				if count > 0 then
+					print("short_DRX deactivating "..threadNumber)
+					ns.short_DRX = false
+
+					print("continuous_reception activating "..threadNumber)
+					ns.continuous_reception = true
+
 					break
 				end
 			end
 
-		-- if RCC_CONNECTED mode is active
-		else
-			-- short_DRX
-			if ns.short_DRX  then
+			-- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
+			if not ns.continuous_reception and limiter:get_tsc_cycles() > ns.last_package_time + inactive_short_DRX_cycle_time then
+				print("short_DRX deactivating after inactive time, "..threadNumber)
+				ns.short_DRX = false
 
-				last_activity = limiter:get_tsc_cycles()
+				print((limiter:get_tsc_cycles() - ns.last_package_time) / 1000)
 
-				local packet_arrival_time = 0
-				local lcount = 0
-				time_stuck_in_loop = 0
+				print("long_DRX activating after inactive time, "..threadNumber)
+				ns.long_DRX = true
+			end
+		end
 
-				-- time to wait
-				while limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
-					lcount = pipe:countPktsizedRing(ring.ring)
-					if (lcount > 0) and (packet_arrival_time == 0) then
-						packet_arrival_time = limiter:get_tsc_cycles()
-					end
-					if not mg.running() then
-						return
-					end
+		-- RCC_CONNECTED long_DRX
+		if ns.long_DRX then
+			last_activity = limiter:get_tsc_cycles()
+
+			local packet_arrival_time = 0
+			local lcount = 0
+			time_stuck_in_loop = 0
+
+			-- time to wait
+			while limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
+				lcount = pipe:countPktsizedRing(ring.ring)
+				if (lcount > 0) and (packet_arrival_time == 0) then
+					packet_arrival_time = limiter:get_tsc_cycles()
+				end
+				if not mg.running() then
+					return
+				end
+			end
+
+			-- save the time the package waited
+			last_activity = limiter:get_tsc_cycles()
+			if (lcount > 0) then
+				time_stuck_in_loop = (last_activity-packet_arrival_time)
+			end
+
+			-- T_on is active
+			while limiter:get_tsc_cycles() < last_activity + active_time_tsc_hz_ms do
+				if not mg.running() then
+					return
 				end
 
-				-- save the time the package waited
-				last_activity = limiter:get_tsc_cycles()
-				if (lcount > 0) then
-					time_stuck_in_loop = (last_activity-packet_arrival_time)
+				count = pipe:countPktsizedRing(ring.ring)
+
+				if count > 0 then
+					print("long_DRX deactivating "..threadNumber)
+					ns.long_DRX = false
+
+					print("continuous_reception activating "..threadNumber)
+					ns.continuous_reception = true
+					break
 				end
+			end
 
-				-- T_on is active
-				while limiter:get_tsc_cycles() < last_activity + active_time_tsc_hz_ms do
-					if not mg.running() then
-						return
-					end
-					-- count = pipe:recvFromPktsizedRing(ring.ring, bufs, 1)
-					count = pipe:countPktsizedRing(ring.ring)
+			-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
+			if not ns.continuous_reception and limiter:get_tsc_cycles() > ns.last_package_time + inactive_long_DRX_cycle_time then
+				print("long_DRX deactivating after inactive time, "..threadNumber)
+				ns.long_DRX = false
 
-					if count > 0 then
-						print("short_DRX deactivating "..threadNumber)
-						ns.short_DRX = false
+				print((limiter:get_tsc_cycles() - ns.last_package_time) / 1000)
 
-						print("continuous_reception activating "..threadNumber)
-						ns.continuous_reception = true
-
-					end
-					-- Reset the short DRX inactive timer and go to continuous reception
-					if ns.continuous_reception then
-						-- ns.inactive_time_short_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
-						break
-					end
-				end
-
-				-- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
-				if not ns.continuous_reception and limiter:get_tsc_cycles() > ns.last_package_time + inactive_short_DRX_cycle_time then
-					print("short_DRX deactivating after inactive time, "..threadNumber)
-
-					ns.short_DRX = false
-					-- ns.inactive_time_long_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
-					print((limiter:get_tsc_cycles() - ns.last_package_time) / 1000)
-
-
-					print("long_DRX activating after inactive time, "..threadNumber)
-				end
-
-			-- RCC_CONNECTED long_DRX
-			else
-				last_activity = limiter:get_tsc_cycles()
-
-				local packet_arrival_time = 0
-				local lcount = 0
-				time_stuck_in_loop = 0
-
-				-- time to wait
-				while limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
-					lcount = pipe:countPktsizedRing(ring.ring)
-					if (lcount > 0) and (packet_arrival_time == 0) then
-						packet_arrival_time = limiter:get_tsc_cycles()
-					end
-					if not mg.running() then
-						return
-					end
-				end
-
-				-- save the time the package waited
-				last_activity = limiter:get_tsc_cycles()
-				if (lcount > 0) then
-					time_stuck_in_loop = (last_activity-packet_arrival_time)
-				end
-
-				-- T_on is active
-				while limiter:get_tsc_cycles() < last_activity + active_time_tsc_hz_ms do
-					if not mg.running() then
-						return
-					end
-
-					count = pipe:countPktsizedRing(ring.ring)
-
-					if count > 0 then
-						print("long_DRX deactivating "..threadNumber)
-						ns.short_DRX = true
-
-						print("continuous_reception activating "..threadNumber)
-						ns.continuous_reception = true
-
-					end
-					-- Reset the short DRX inactive timer and go to continuous reception
-					if ns.continuous_reception then
-						--ns.inactive_time_long_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
-						break
-					end
-				end
-
-				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
-				if not ns.continuous_reception and limiter:get_tsc_cycles() > ns.last_package_time + inactive_long_DRX_cycle_time then
-					print("long_DRX deactivating after inactive time, "..threadNumber)
-					ns.short_DRX = true
-
-					-- ns.inactive_time_long_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
-					print((limiter:get_tsc_cycles() - ns.last_package_time) / 1000)
-
-					print("rcc_idle activating after inactive time, "..threadNumber)
-					ns.rcc_idle = true
-				end
+				print("rcc_idle activating after inactive time, "..threadNumber)
+				ns.rcc_idle = true
 			end
 		end
 	end
@@ -494,16 +479,10 @@ end
 -- Help function:
 -- cast a uint64_i to "lua number"
 function ullToNumber(value)
-	
+
 	local vstring = tostring(value)
 	-- remove the "ULL" ending
 	vstring = string.sub(vstring, 0, string.len(vstring) - 3)
 
 	return tonumber(vstring)
 end
-
-
-
-
-
-
