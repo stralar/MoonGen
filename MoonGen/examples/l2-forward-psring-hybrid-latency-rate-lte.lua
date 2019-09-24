@@ -421,7 +421,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 					ns.short_DRX = false
 					-- ns.inactive_time_long_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
-					print(ns.last_package_time - limiter:get_tsc_cycles())
+					print((limiter:get_tsc_cycles() - ns.last_package_time) / 1000)
 
 
 					print("long_DRX activating after inactive time, "..threadNumber)
@@ -481,7 +481,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 					ns.short_DRX = true
 
 					-- ns.inactive_time_long_DRX_cycle = ullToNumber(limiter:get_tsc_cycles())
-					print(ns.last_package_time - limiter:get_tsc_cycles())
+					print((limiter:get_tsc_cycles() - ns.last_package_time) / 1000)
 
 					print("rcc_idle activating after inactive time, "..threadNumber)
 					ns.rcc_idle = true
