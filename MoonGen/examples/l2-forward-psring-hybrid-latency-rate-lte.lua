@@ -357,6 +357,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 					ns.first_rcc_connected = true
 
+					ns.last_package_time = ullToNumber(limiter:get_tsc_cycles())
+
 					break
 				end
 			end
@@ -402,6 +404,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 					print("continuous_reception activating "..threadNumber)
 					ns.continuous_reception = true
+
+					ns.last_package_time = ullToNumber(limiter:get_tsc_cycles())
 
 					break
 				end
@@ -458,6 +462,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 					print("continuous_reception activating "..threadNumber)
 					ns.continuous_reception = true
+
+					ns.last_package_time = ullToNumber(limiter:get_tsc_cycles())
+
 					break
 				end
 			end
