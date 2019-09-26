@@ -12,6 +12,10 @@ local histogram = require "histogram"
 
 local namespaces = require "namespaces"
 
+local arp = require "proto.arp"
+local ip4 = require "proto.ip4"
+local icmp = require "proto.icmp"
+
 local PKT_SIZE	= 60
 
 
@@ -130,6 +134,12 @@ function receive(ring, rxQueue, rxDev, randomON)
 			end
 
 			local buf = bufs[iix]
+			local pkt = buf:getArpPacket()
+			if pkt.ip4:getProtocol() == arp.PROTO_ADDRESS_TYPE_IP then
+				print("ARP package arrived")
+			else
+				print("NOTHING")
+			end
 			local ts = limiter:get_tsc_cycles()
 			buf.udata64 = ts
 		end
