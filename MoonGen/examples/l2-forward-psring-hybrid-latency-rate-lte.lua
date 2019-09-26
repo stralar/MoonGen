@@ -15,6 +15,7 @@ local namespaces = require "namespaces"
 local arp = require "proto.arp"
 local ip4 = require "proto.ip4"
 local icmp = require "proto.icmp"
+local eth = require "proto.ethernet"
 
 local PKT_SIZE	= 60
 
@@ -135,13 +136,19 @@ function receive(ring, rxQueue, rxDev, randomON)
 
 			local buf = bufs[iix]
 			local pkt = buf:getArpPacket()
-			if pkt.ip4:getProtocol() == arp.PROTO_ADDRESS_TYPE_IP then
+			if pkt.eth:getType() == eth.TYPE_ARP then
 				print("ARP package arrived")
-			else
-				print("NOTHING")
+				-- bufs[iix] = nil
+				-- bufs:freeAll()
+				-- count = count - 1
+			--else
 			end
-			local ts = limiter:get_tsc_cycles()
-			buf.udata64 = ts
+				-- print("NOTHING")
+                        local ts = limiter:get_tsc_cycles()
+                        buf.udata64 = ts
+			
+			-- local ts = limiter:get_tsc_cycles()
+			-- buf.udata64 = ts
 		end
 
 
