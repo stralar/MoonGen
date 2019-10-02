@@ -438,17 +438,18 @@ class CCDF():
         for file in sorted(glob.glob(filePathDetails)):
             print(file)
             self.data.append(np.sort(np.loadtxt(file, delimiter="\t")))
+            for i in range(len(self.data[len(self.data) - 1])):
+                self.data[len(self.data) - 1][i] *= 0.001
             self.legend.append(file)
 
-        print(len(self.data))
-        #np.bincount(self.data)
+        print(self.data[1])
 
         # calculate cdf values
         for val in self.data:
             tmpSum = float(val.sum())
             tmpCumSum = val.cumsum()
             tmpCumSum2 = tmpCumSum / tmpCumSum[-1]
-            print("\nCumSum: " + str(tmpCumSum) + "\nNorm: "+ str(tmpCumSum2))
+            #print("\nCumSum: " + str(tmpCumSum) + "\nNorm: "+ str(tmpCumSum2))
 
             self.sum.append(tmpSum)
             self.cdf.append(val.cumsum(0) / tmpSum)
@@ -489,14 +490,14 @@ class CCDF():
 
         plt.yscale('log')
         plt.ylim(0.01, 1)
-        plt.xlim(0, 200)
+        plt.xlim(0, 0.25)
 
         plt.grid(ls=':', color='gray')
 
 
 
         plt.ylabel('CCDF')
-        plt.xlabel('RTT [s]')
+        plt.xlabel('RTT [ms]')
 
         plt.savefig(fileNamePing + self.fileSaveName + ".png")
 
