@@ -4,11 +4,11 @@
 destIPAdress="10.1.3.3"
 #destIPAdress="localhost"
 
-fileName="ping-psr-t08"
+fileName="ping-psr-t13"
 
 
 # Paper 5 x 10³
-pingMaxCount=500
+pingMaxCount=5000
 
 # in Seconds
 interPacketGap=()
@@ -22,12 +22,14 @@ then
         interPacketGap+=($time)
     done
 else
-    interPacketGap+=(0.01 0.1 0.4 2.3 2.7 10.0 10.7 11.0)
+    interPacketGap+=(0.01 0.2 0.3 2.5 2.6 11 10.5 10.6)
 fi
 
 for (( i=0; i<${#interPacketGap[@]}; i++ ));
 do
     outputFileName="$fileName-i${interPacketGap[i]}.csv"
+    outputLogName="$fileName-i${interPacketGap[i]}.log"
+
 
     rm $outputFileName
 
@@ -36,7 +38,8 @@ do
 
         # ping "-c $pingMaxCount -i $interPacketGap $destIPAdress"
         # rand=$(echo "scale=2;$((RANDOM % 100)) / 100" | bc)
-        pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} $destIPAdress | tr " " "\n")
+        # pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} $destIPAdress | tr " " "\n")
+	pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} $destIPAdress > $outputLogName)
 
     echo "$outputFileName is Finished at $(date +%T)"
 

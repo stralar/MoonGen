@@ -12,11 +12,6 @@ local histogram = require "histogram"
 
 local namespaces = require "namespaces"
 
-local arp = require "proto.arp"
-local ip4 = require "proto.ip4"
-local icmp = require "proto.icmp"
-local eth = require "proto.ethernet"
-
 local PKT_SIZE	= 60
 
 
@@ -126,7 +121,6 @@ function receive(ring, rxQueue, rxDev, randomON)
 		count_hist:update(count)
 		--print("receive thread count="..count)
 		for iix=1,count do
-
 			local last_time = limiter:get_tsc_cycles() + (tsc_hz_ms * math.random())
 			while randomON and limiter:get_tsc_cycles() < last_time do
 				if not mg.running() then
@@ -135,26 +129,13 @@ function receive(ring, rxQueue, rxDev, randomON)
 			end
 
 			local buf = bufs[iix]
-			local pkt = buf:getArpPacket()
-			if pkt.eth:getType() == eth.TYPE_ARP then
-				print("ARP package arrived")
-				-- bufs[iix] = nil
-				-- bufs:freeAll()
-				-- count = count - 1
-			--else
-			end
-				-- print("NOTHING")
-                        local ts = limiter:get_tsc_cycles()
-                        buf.udata64 = ts
-			
-			-- local ts = limiter:get_tsc_cycles()
-			-- buf.udata64 = ts
+			local ts = limiter:get_tsc_cycles()
+                       	buf.udata64 = ts
 		end
-
 
 		if count > 0 then
 			pipe:sendToPktsizedRing(ring.ring, bufs, count)
-			--print("ring count: ",pipe:countPacketRing(ring.ring))
+			-- print("buf count: "..count)
 			ringsize_hist:update(pipe:countPktsizedRing(ring.ring))
 		end
 	end
@@ -259,6 +240,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 			end
 			ns.first_rcc_connected = false
+			if time_stuck_in_loop > 0 then
+				time_stuck_in_loop = time_stuck_in_loop + rcc_connection_build_delay_tsc_hz_ms
+			end
 		end
 
 		-- if the continuous_reception mode is active
