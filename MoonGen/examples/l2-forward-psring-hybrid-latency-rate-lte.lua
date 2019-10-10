@@ -243,6 +243,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			if time_stuck_in_loop > 0 then
 				time_stuck_in_loop = time_stuck_in_loop + rcc_connection_build_delay_tsc_hz_ms
 			end
+			last_activity = limiter:get_tsc_cycles()
 		end
 
 		-- if the continuous_reception mode is active
@@ -303,16 +304,18 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				-- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
 				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
 
+				last_activity = limiter:get_tsc_cycles()
 				ns.last_package_time = ullToNumber(limiter:get_tsc_cycles())
 			end
+			if limiter:get_tsc_cycles() > last_activity + inactive_continuous_reception_cycle_time then
+				if limiter:get_tsc_cycles() > ns.last_package_time + inactive_continuous_reception_cycle_time then
 
-			if limiter:get_tsc_cycles() > ns.last_package_time + inactive_continuous_reception_cycle_time then
+					print("continuous_reception deactivating "..threadNumber)
+					ns.continuous_reception = false
 
-				print("continuous_reception deactivating "..threadNumber)
-				ns.continuous_reception = false
-
-				print("short_DRX activating "..threadNumber)
-				ns.short_DRX = true
+					print("short_DRX activating "..threadNumber)
+					ns.short_DRX = true
+				end
 			end
 		end
 
