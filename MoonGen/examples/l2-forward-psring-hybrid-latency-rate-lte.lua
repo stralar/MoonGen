@@ -272,7 +272,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				local send_time = arrival_timestamp
 				if (closses > 0) then
-					send_time = send_time + (((closses+1)*concealed_resend_time + latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
+					send_time = send_time + ((closses*concealed_resend_time + latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
 				else
 					send_time = send_time + ((latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
 				end
