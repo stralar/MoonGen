@@ -469,7 +469,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
             time_stuck_in_loop = 0
 
             -- time to wait
-            while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
+            while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms - rcc_connection_build_delay_tsc_hz_ms do
                 lcount = pipe:countPktsizedRing(ring.ring)
                 if (lcount > 0) and (packet_arrival_time == 0) then
                     packet_arrival_time = limiter:get_tsc_cycles()
