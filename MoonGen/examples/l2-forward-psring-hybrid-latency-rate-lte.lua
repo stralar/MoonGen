@@ -406,7 +406,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 
 				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
-				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_long_DRX_cycle_time then
+				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_long_DRX_cycle_time - rcc_connection_build_delay_tsc_hz_ms then
 
 					print("long_DRX deactivating after inactive time in waiting, "..threadNumber)
 					ns.long_DRX = false
@@ -447,7 +447,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
 				-- if not ns.continuous_reception and limiter:get_tsc_cycles() > last_activity + inactive_long_DRX_cycle_time then
-				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_long_DRX_cycle_time then
+				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_long_DRX_cycle_time - rcc_connection_build_delay_tsc_hz_ms then
 
 					print("long_DRX deactivating after inactive time in active, "..threadNumber)
 					ns.long_DRX = false
@@ -469,7 +469,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
             time_stuck_in_loop = 0
 
             -- time to wait
-            while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms - rcc_connection_build_delay_tsc_hz_ms do
+            while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
                 lcount = pipe:countPktsizedRing(ring.ring)
                 if (lcount > 0) and (packet_arrival_time == 0) then
                     packet_arrival_time = limiter:get_tsc_cycles()
