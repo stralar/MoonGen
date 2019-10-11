@@ -440,9 +440,10 @@ class CCDF():
             self.data.append(np.sort(np.loadtxt(file, delimiter="\t")))
             for i in range(len(self.data[len(self.data) - 1])):
                 self.data[len(self.data) - 1][i] *= 0.001
+                pass
             self.legend.append(file)
 
-        print(self.data[1])
+        #print(self.data[1])
 
         # calculate cdf values
         for val in self.data:
@@ -490,7 +491,10 @@ class CCDF():
 
         plt.yscale('log')
         plt.ylim(0.01, 1)
-        plt.xlim(0, 0.25)
+        #for ping
+        #plt.xlim(0, 0.25)
+        #for harq
+        #plt.xlim(0.028, 0.04)
 
         plt.grid(ls=':', color='gray')
 
