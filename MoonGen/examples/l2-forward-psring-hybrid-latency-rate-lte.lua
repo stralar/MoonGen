@@ -337,15 +337,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				if not mg.running() then
 					return
 				end
-
-                -- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
-                if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_short_DRX_cycle_time then
-                    print("short_DRX deactivating after inactive time, "..threadNumber)
-                    ns.short_DRX = false
-
-                    print("long_DRX activating after inactive time, "..threadNumber)
-                    ns.long_DRX = true
-                end
 			end
 
 			-- save the time the packet waited
@@ -369,22 +360,23 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 					print("continuous_reception activating "..threadNumber)
 					ns.continuous_reception = true
 
-                    last_activity = limiter:get_tsc_cycles()
+					last_activity = limiter:get_tsc_cycles()
 					ns.last_packet_time = ullToNumber(limiter:get_tsc_cycles())
 
 					break
 				end
-
-                -- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
-                if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_short_DRX_cycle_time then
-                    print("short_DRX deactivating after inactive time, "..threadNumber)
-                    ns.short_DRX = false
-
-                    print("long_DRX activating after inactive time, "..threadNumber)
-                    ns.long_DRX = true
-                end
 			end
 
+			-- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
+			if not ns.continuous_reception and limiter:get_tsc_cycles() > last_activity + inactive_short_DRX_cycle_time then
+				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_short_DRX_cycle_time then
+					print("short_DRX deactivating after inactive time, "..threadNumber)
+					ns.short_DRX = false
+
+					print("long_DRX activating after inactive time, "..threadNumber)
+					ns.long_DRX = true
+				end
+			end
 		end
 
 		-- RCC_CONNECTED long_DRX
@@ -403,16 +395,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 				if not mg.running() then
 					return
-				end
-
-				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
-				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_long_DRX_cycle_time then
-
-					print("long_DRX deactivating after inactive time in waiting, "..threadNumber)
-					ns.long_DRX = false
-
-					print("rcc_idle activating after inactive time, "..threadNumber)
-					ns.rcc_idle = true
 				end
 			end
 
@@ -442,20 +424,19 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 					break
 				end
+			end
 
-				-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
-				-- if not ns.continuous_reception and limiter:get_tsc_cycles() > last_activity + inactive_long_DRX_cycle_time then
+			-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
+			if not ns.continuous_reception and limiter:get_tsc_cycles() > last_activity + inactive_long_DRX_cycle_time then
 				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_long_DRX_cycle_time then
 
-					print("long_DRX deactivating after inactive time in active, "..threadNumber)
+					print("long_DRX deactivating after inactive time, "..threadNumber)
 					ns.long_DRX = false
 
 					print("rcc_idle activating after inactive time, "..threadNumber)
 					ns.rcc_idle = true
 				end
-
 			end
-
 		end
 
         -- if the RCC_IDLE mode is active
