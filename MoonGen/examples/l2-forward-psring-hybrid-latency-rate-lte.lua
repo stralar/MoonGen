@@ -32,8 +32,8 @@ function configure(parser)
 	parser:option("--long_DRX_cycle_length", "The long DRX cycle length in ms"):args(1):convert(tonumber):default(30)
 	parser:option("--active_time", "The active time from PDCCH in ms"):args(1):convert(tonumber):default(2)
 	parser:option("--continuous_reception_inactivity_timer", "The continous reception inactivity timer in ms"):args(1):convert(tonumber):default(200)
-	parser:option("--short_DRX_inactivity_timer", "The short DRX inactivity timer in ms"):args(1):convert(tonumber):default(2500)
-	parser:option("--long_DRX_inactivity_timer", "The long DRX inactivity timer in ms"):args(1):convert(tonumber):default(10500)
+	parser:option("--short_DRX_inactivity_timer", "The short DRX inactivity timer in ms"):args(1):convert(tonumber):default(2300)
+	parser:option("--long_DRX_inactivity_timer", "The long DRX inactivity timer in ms"):args(1):convert(tonumber):default(8000)
 	parser:option("--rcc_idle_cycle_length", "The RCC IDLE cycle length in ms"):args(1):convert(tonumber):default(100)
 	parser:option("--rcc_connection_build_delay", "The Delay from RCC_IDLE to RCC_CONNECT in ms"):args(1):convert(tonumber):default(50)
 	return parser:parse()
@@ -212,9 +212,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 	--local inactive_long_DRX_cycle_time = (long_DRX_inactivity_timer - short_DRX_inactivity_timer) * tsc_hz_ms
 
-	local inactive_short_DRX_cycle_time = short_DRX_inactivity_timer * tsc_hz_ms
+	local inactive_short_DRX_cycle_time = (short_DRX_inactivity_timer + continuous_reception_inactivity_timer) * tsc_hz_ms
 
-	local inactive_long_DRX_cycle_time = long_DRX_inactivity_timer * tsc_hz_ms
+	local inactive_long_DRX_cycle_time = (long_DRX_inactivity_timer + short_DRX_inactivity_timer + continuous_reception_inactivity_timer)* tsc_hz_ms
 
 	-- 16 to 19 signalling messages
 	local rcc_connection_build_delay_tsc_hz_ms = rcc_connection_build_delay * tsc_hz_ms
