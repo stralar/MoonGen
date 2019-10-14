@@ -440,6 +440,9 @@ class CCDF():
             self.data.append(np.sort(np.loadtxt(file, delimiter="\t")))
             for i in range(len(self.data[len(self.data) - 1])):
                 self.data[len(self.data) - 1][i] *= 0.001
+                #if self.data[len(self.data) - 1][i] > 0.04:
+                #    print(self.data[len(self.data) - 1][i])
+                #self.data[len(self.data) - 1][i] += 0.010
                 pass
             self.legend.append(file)
 
@@ -492,9 +495,9 @@ class CCDF():
         plt.yscale('log')
         plt.ylim(0.01, 1)
         #for ping
-        #plt.xlim(0, 0.25)
+        plt.xlim(0, 0.25)
         #for harq
-        #plt.xlim(0.028, 0.04)
+        #plt.xlim(0.038, 0.05)
 
         plt.grid(ls=':', color='gray')
 

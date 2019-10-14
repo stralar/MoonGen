@@ -27,7 +27,6 @@ function configure(parser)
 	parser:option("-o --loss", "Rate of packet drops"):args(2):convert(tonumber):default({0,0})
 	parser:option("-c --concealedloss", "Rate of concealed packet drops"):args(2):convert(tonumber):default({0,0})
 	parser:option("-u --catchuprate", "After a concealed loss, this rate will apply to the backed-up frames."):args(2):convert(tonumber):default({0,0})
-	parser:option("-y --random", "Manipulate the receiving time by adding [0-1]ms"):args(1):convert(tonumber):default(0)
 	parser:option("--short_DRX_cycle_length", "The short DRX cycle length in ms"):args(1):convert(tonumber):default(6)
 	parser:option("--long_DRX_cycle_length", "The long DRX cycle length in ms"):args(1):convert(tonumber):default(12)
 	parser:option("--active_time", "The active time from PDCCH in ms"):args(1):convert(tonumber):default(1)
@@ -42,10 +41,6 @@ end
 
 function master(args)
 
-	if args.random ~= 0 and  args.random ~= 1 then
-		print("Wrong Parameter for -y, only 0 or 1 accept")
-		return
-	end
 	-- configure devices
 	for i, dev in ipairs(args.dev) do
 		args.dev[i] = device.config{
@@ -94,9 +89,9 @@ function master(args)
 
 	-- start the receiving/latency tasks
 	for i = 1, args.threads do
-		mg.startTask("receive", ring1, args.dev[2]:getRxQueue(i - 1), args.dev[2], args.random == 1)
+		mg.startTask("receive", ring1, args.dev[2]:getRxQueue(i - 1), args.dev[2])
 		if args.dev[1] ~= args.dev[2] then
-			mg.startTask("receive", ring2, args.dev[1]:getRxQueue(i - 1), args.dev[1], args.random == 1)
+			mg.startTask("receive", ring2, args.dev[1]:getRxQueue(i - 1), args.dev[1])
 		end
 	end
 
@@ -104,7 +99,7 @@ function master(args)
 end
 
 
-function receive(ring, rxQueue, rxDev, randomON)
+function receive(ring, rxQueue, rxDev)
 	--print("receive thread...")
 
 	local tsc_hz = libmoon:getCyclesFrequency()
@@ -121,16 +116,9 @@ function receive(ring, rxQueue, rxDev, randomON)
 		count_hist:update(count)
 		--print("receive thread count="..count)
 		for iix=1,count do
-			local last_time = limiter:get_tsc_cycles() + (tsc_hz_ms * math.random())
-			while randomON and limiter:get_tsc_cycles() < last_time do
-				if not mg.running() then
-					return
-				end
-			end
-
 			local buf = bufs[iix]
 			local ts = limiter:get_tsc_cycles()
-                       	buf.udata64 = ts
+			buf.udata64 = ts
 		end
 
 		if count > 0 then
@@ -159,6 +147,8 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 	print("Thread: "..threadNumber)
 
+	local debug = false
+
 	-- DRX in LTE is in RRC_IDLE or in RRC_CONNECTED mode
 	-- RRC_IDLE: sleep state
 	-- RRC_CONNECTED:
@@ -171,30 +161,17 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 	local last_activity = limiter:get_tsc_cycles()
 
-	ns.inactive_time_short_DRX_cycle = ullToNumber(last_activity)
-	ns.inactive_time_long_DRX_cycle = ullToNumber(last_activity)
-	ns.inactive_time_continuous_reception_cycle = ullToNumber(last_activity)
 	ns.last_packet_time = ullToNumber(last_activity)
-
-	--local continuous_reception_inactivity_time_ms = 200
-	--local inactive_short_DRX_cycle_time_ms = 2500
-	--local inactive_long_DRX_cycle_time_ms = 10500
-
 
 	ns.first_rcc_connected = false
 
-	local debug = false
-
-
-	-- larger batch size is useful when sending it through a rate limi ter
+	-- larger batch size is useful when sending it through a rate limiter
 	local bufs = memory.createBufArray()  --memory:bufArray()  --(128)
 	local count = 0
-
 
 	-- when there is a concealed loss, the backed-up packets can
 	-- catch-up at line rate
 	local catchup_mode = false
-
 
 	-- between 0.32 and 2.56 sec
 	local rcc_idle_cycle_length_tsc_hz_ms = rcc_idle_cycle_length * tsc_hz_ms
@@ -207,10 +184,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- will be reset after each send/received packet
 	-- timer is between 1ms - 2.56sec Paper-[10]
 	local inactive_continuous_reception_cycle_time = continuous_reception_inactivity_timer * tsc_hz_ms
-
-	--local inactive_short_DRX_cycle_time = (short_DRX_inactivity_timer - continuous_reception_inactivity_timer) * tsc_hz_ms
-
-	--local inactive_long_DRX_cycle_time = (long_DRX_inactivity_timer - short_DRX_inactivity_timer) * tsc_hz_ms
 
 	local inactive_short_DRX_cycle_time = (short_DRX_inactivity_timer + continuous_reception_inactivity_timer) * tsc_hz_ms
 
@@ -225,10 +198,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local time_stuck_in_loop = 0
 
 	while mg.running() do
-		--print("top of loop")
 		-- RCC_IDLE to RCC_CONNECTED the delay
 		if ns.first_rcc_connected then
-			print("Build RCC_CONNECTION "..threadNumber)
+			if debug then print("Build RCC_CONNECTION "..threadNumber) end
 			last_activity = limiter:get_tsc_cycles()
 			while limiter:get_tsc_cycles() < last_activity + rcc_connection_build_delay_tsc_hz_ms do
 				if not mg.running() then
@@ -272,15 +244,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 
 				local send_time = arrival_timestamp
-				if (closses > 0) then
-					send_time = send_time + ((closses*concealed_resend_time + latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
-				else
-					send_time = send_time + ((latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
-				end
+				send_time = send_time + ((closses*concealed_resend_time + latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
+
 				time_stuck_in_loop = 0
 
-				local cur_time = limiter:get_tsc_cycles()
-				--print("timestamps", arrival_timestamp, send_time, cur_time)
 				-- spin/wait until it is time to send this frame
 				-- this assumes frame order is preserved
 				while limiter:get_tsc_cycles() < send_time do
@@ -292,7 +259,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				local pktSize = buf.pkt_len + 24
 				if (catchup_mode) then
-					--print "operating in catchup mode!"
 					buf:setDelay((pktSize) * (linkspeed/catchuprate - 1))
 				else
 					buf:setDelay((pktSize) * (linkspeed/rate - 1))
@@ -310,10 +276,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			if limiter:get_tsc_cycles() > last_activity + inactive_continuous_reception_cycle_time then
 				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_continuous_reception_cycle_time then
 
-					print("continuous_reception deactivating "..threadNumber)
+					if debug then print("continuous_reception deactivating "..threadNumber) end
 					ns.continuous_reception = false
 
-					print("short_DRX activating "..threadNumber)
+					if debug then  print("short_DRX activating "..threadNumber) end
 					ns.short_DRX = true
 				end
 			end
@@ -354,10 +320,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				count = pipe:countPktsizedRing(ring.ring)
 
 				if count > 0 then
-					print("short_DRX deactivating "..threadNumber)
+					if debug then  print("short_DRX deactivating "..threadNumber) end
 					ns.short_DRX = false
 
-					print("continuous_reception activating "..threadNumber)
+					if debug then  print("continuous_reception activating "..threadNumber) end
 					ns.continuous_reception = true
 
 					last_activity = limiter:get_tsc_cycles()
@@ -369,10 +335,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 			-- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
 			if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_short_DRX_cycle_time then
-				print("short_DRX deactivating after inactive time, "..threadNumber)
+				if debug then  print("short_DRX deactivating after inactive time, "..threadNumber) end
 				ns.short_DRX = false
 
-				print("long_DRX activating after inactive time, "..threadNumber)
+				if debug then  print("long_DRX activating after inactive time, "..threadNumber) end
 				ns.long_DRX = true
 			end
 		end
@@ -411,10 +377,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				count = pipe:countPktsizedRing(ring.ring)
 
 				if count > 0 then
-					print("long_DRX deactivating "..threadNumber)
+					if debug then  print("long_DRX deactivating "..threadNumber) end
 					ns.long_DRX = false
 
-					print("continuous_reception activating "..threadNumber)
+						if debug then  print("continuous_reception activating "..threadNumber) end
 					ns.continuous_reception = true
 
 					last_activity = limiter:get_tsc_cycles()
@@ -427,10 +393,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
 			if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_long_DRX_cycle_time then
 
-				print("long_DRX deactivating after inactive time, "..threadNumber)
+				if debug then print("long_DRX deactivating after inactive time, "..threadNumber) end
 				ns.long_DRX = false
 
-				print("rcc_idle activating after inactive time, "..threadNumber)
+				if debug then  print("rcc_idle activating after inactive time, "..threadNumber) end
 				ns.rcc_idle = true
 			end
 		end
@@ -469,10 +435,10 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
                 if count > 0 then
 
-                    print("rcc_idle deactivating "..threadNumber)
+					if debug then print("rcc_idle deactivating "..threadNumber) end
                     ns.rcc_idle = false
 
-                    print("continuous_reception activating "..threadNumber)
+					if debug then print("continuous_reception activating "..threadNumber) end
                     ns.continuous_reception = true
 
                     ns.first_rcc_connected = true
