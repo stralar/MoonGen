@@ -516,12 +516,11 @@ class CCDF():
 if __name__ == '__main__':
     if fileName:
         bt = BoxplotThroughput()
-
         bt.draw_graph()
 
         bd = BoxplotDelay()
-
         bd.draw_graph()
+        '''
         ad = AverageDelay(5)
         ad.draw_graph()
 
@@ -545,7 +544,7 @@ if __name__ == '__main__':
 
         lf2 = LossFrequency2(50)
         lf2.draw_graph()
-
+        '''
     if fileNamePing:
         p = CCDF()
         p.draw_graph()
