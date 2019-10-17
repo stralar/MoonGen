@@ -625,7 +625,7 @@ def bandwidthUDP():
             if startTimeStamp == None:
                 startTimeStamp = float(row[1])
 
-            if (float(row[1]) - startTimeStamp >= 1 and float(row[1]) - startTimeStamp <= 3):
+            if (float(row[1]) - startTimeStamp >= 0 and float(row[1]) - startTimeStamp <= 4):
                 csvArray.append(row)
 
     resultWriteBandwidth = open(fileSaveNameBandwidth, 'w')
@@ -657,50 +657,55 @@ def bandwidthUDP():
             # TODO 1. wir benutzen den Intervall Counter um die Bandbreite abzuspeichern <- derzeit benutzt
             # TODO 2. Oder wir nutzen die timeStamps der Pakages und sagen zu diesem Pakage welche Bandbreite zu dem Zeitpunkt gemessen wurde
             # If the Package is arrived
-            if(float(csvArray[i][2]) == interfaceSource):
-
-                for j in range(i+1, len(csvArray)):
-
-                    if(float(csvArray[j][2]) == interfaceDestination and csvArray[i][9] == csvArray[j][9]):
-                        destinationPckt = csvArray[i]
-                        timeStampDest = float(destinationPckt[1]) - startTimeStamp
 
 
-                        #if(i == len(csvArray) - 1):
-                        if(False):
-                            actualBandwidth = byteTransfared / bandWidthInterval
-                            byteString = str(ipId) + "\t" + str(timeCounter - 1 + timeStampDest - firstInIntervall) + "\t" + str((actualBandwidth * 8) / (timeStampDest - firstInIntervall)) + "\n"
+            if(float(csvArray[i][2]) == interfaceDestination):
+                destinationPckt = csvArray[i]
+                timeStampDest = float(destinationPckt[1]) - startTimeStamp
 
-                            resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
-                            resultWriteBandwidth.write(byteString)
-                            resultWriteBandwidth.close()
 
-                            byteTransfared = 0
-                            timeCounter += bandWidthInterval
-                            firstInIntervall = float(destinationPckt[1]) - startTimeStamp
-                            break
-                        elif((timeStampDest - firstInIntervall) < bandWidthInterval):
-                            # die 46 Byte kommen von preamble, SFD, MAC-DEST, MAC-SRC, FCS, inter-packe
-                            byteTransfared += float(destinationPckt[8]) - 46
-                        else:
-                            actualBandwidth = byteTransfared / bandWidthInterval
+                #if(i == len(csvArray) - 1):
+                if(False):
+                    actualBandwidth = byteTransfared / bandWidthInterval
+                    byteString = str(ipId) + "\t" + str(timeCounter - 1 + timeStampDest - firstInIntervall) + "\t" + str((actualBandwidth * 8) / (timeStampDest - firstInIntervall)) + "\n"
 
-                            byteString = str(ipId) + "\t" + str(timeCounter) + "\t" + str(actualBandwidth * 8) + "\n"
+                    resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
+                    resultWriteBandwidth.write(byteString)
+                    resultWriteBandwidth.close()
 
-                            resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
-                            resultWriteBandwidth.write(byteString)
-                            resultWriteBandwidth.close()
+                    byteTransfared = 0
+                    timeCounter += bandWidthInterval
+                    firstInIntervall = float(destinationPckt[1]) - startTimeStamp
+                    break
+                elif((timeStampDest - firstInIntervall) < bandWidthInterval):
+                    # die 46 Byte kommen von preamble, SFD, MAC-DEST, MAC-SRC, FCS, inter-packe
+                    byteTransfared += float(destinationPckt[8]) - 46
+                else:
+                    actualBandwidth = byteTransfared / bandWidthInterval
 
-                            byteTransfared = 0
-                            timeCounter += bandWidthInterval
-                            firstInIntervall = float(destinationPckt[1]) - startTimeStamp
-                        break
+                    byteString = str(ipId) + "\t" + str(timeCounter) + "\t" + str(actualBandwidth * 8) + "\n"
+
+                    resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
+                    resultWriteBandwidth.write(byteString)
+                    resultWriteBandwidth.close()
+
+                    byteTransfared = float(0)
+                    timeCounter += bandWidthInterval
+                    firstInIntervall = float(destinationPckt[1]) - startTimeStamp
+                    #firstInIntervall += bandWidthInterval
+
 
 
         except ValueError as e:
 
             pass
+    actualBandwidth = byteTransfared / bandWidthInterval
 
+    byteString = str(ipId) + "\t" + str(timeCounter) + "\t" + str(actualBandwidth * 8) + "\n"
+
+    resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
+    resultWriteBandwidth.write(byteString)
+    resultWriteBandwidth.close()
 
 
     print("Finished Bandwidth")
