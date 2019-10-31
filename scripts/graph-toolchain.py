@@ -13,8 +13,10 @@ mit dem dateinamen werden dann die jeweiligen Files gesucht und in das array gel
 '''
 import argparse
 import glob
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 from operator import itemgetter
 
 
@@ -93,11 +95,13 @@ class BoxplotThroughput():
 
         ax.grid(axis='y', ls=':', color='gray')
 
-        ax.set_xlabel(self.xLabel)
-        ax.set_ylabel(self.yLabel)
+        ax.set_xlabel(self.xLabel, fontsize='xx-large', family='serif')
+        ax.set_ylabel(self.yLabel, fontsize='xx-large', family='serif')
 
-        ax.set_xticklabels(self.boxLabelX)
+
+        ax.set_xticklabels(self.boxLabelX, fontsize='xx-large', family='serif')
         ax.set_yticks(self.boxLabelY)
+        ax.set_yticklabels(self.boxLabelY, fontsize='xx-large', family='serif')
 
         # Save the figure
         fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
@@ -112,7 +116,7 @@ class BoxplotDelay():
     yLabel = "delay [sec]"
     xLabel = "fixed send rate [Mbps]"
     boxLabelX = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-    boxLabelY = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]
+    boxLabelY = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]
 
     fileSaveName = "-delay"
 
@@ -165,13 +169,14 @@ class BoxplotDelay():
         for flier in bp['fliers']:
             flier.set(marker='+', color='red')
 
-        ax.set_xlabel(self.xLabel)
-        ax.set_ylabel(self.yLabel)
+        ax.set_xlabel(self.xLabel, fontsize='xx-large', family='serif')
+        ax.set_ylabel(self.yLabel, fontsize='xx-large', family='serif')
 
         ax.grid(axis='y', ls=':', color='gray')
 
-        ax.set_xticklabels(self.boxLabelX)
+        ax.set_xticklabels(self.boxLabelX, fontsize='xx-large', family='serif')
         ax.set_ybound(0, 0.35)
+        ax.set_yticklabels(self.boxLabelY, fontsize='xx-large', family='serif')
 
         # Save the figure
         fig.savefig(fileName + self.fileSaveName, bbox_inches='tight')
@@ -435,7 +440,7 @@ class CCDF():
 
         filePathDetails = fileNamePing + "*.csv"
 
-        for file in sorted(glob.glob(filePathDetails)):
+        for file in sorted(glob.glob(filePathDetails), key=os.path.getmtime, reverse=False):
             print(file)
             self.data.append(np.sort(np.loadtxt(file, delimiter="\t")))
             for i in range(len(self.data[len(self.data) - 1])):
@@ -444,7 +449,8 @@ class CCDF():
                 #    print(self.data[len(self.data) - 1][i])
                 #self.data[len(self.data) - 1][i] += 0.010
                 pass
-            self.legend.append(file)
+            #self.legend.append(file)
+            #self.legend.append(file)
 
         #print(self.data[1])
 
@@ -477,7 +483,7 @@ class CCDF():
 
         plt.ylim([0,1])
         plt.ylabel('CDF')
-        plt.xlabel('RTT [ms]')
+        plt.xlabel('RTT [s]')
 
         #plt.savefig(fileNamePing + "-cdf.png")
 
@@ -489,24 +495,34 @@ class CCDF():
         for val in self.data:
             plt.plot(val, 1 - (val.cumsum() / val.cumsum()[-1]))
 
+        self.legend = ["inter-packet-time = 0.01s", "inter-packet-time = 0.2s", "inter-packet-time = 0.3s", "inter-packet-time = 2.5", "inter-packet-time = 2.6s", "inter-packet-time = 10.5s", "inter-packet-time = 10.6s", "inter-packet-time = 11s"]
+
         plt.legend(self.legend)
 
 
         plt.yscale('log')
         plt.ylim(0.01, 1)
+        #plt.ylim(0.00001, 1)
         #for ping
-        plt.xlim(0, 0.25)
+        plt.xlim(0, 0.2)
         #for harq
-        #plt.xlim(0.038, 0.05)
+        #plt.xlim(0.038, 0.065)
 
         plt.grid(ls=':', color='gray')
 
 
 
-        plt.ylabel('CCDF')
-        plt.xlabel('RTT [ms]')
+        plt.ylabel('CCDF', fontsize='xx-large', family='serif')
+        plt.xlabel('RTT [s]', fontsize='xx-large', family='serif')
 
-        plt.savefig(fileNamePing + self.fileSaveName + ".png")
+        plt.xticks([0, 0.05, 0.1, 0.15, 0.2], fontsize='xx-large', family='serif')
+        #plt.xticks([0.04, 0.045, 0.05, 0.055, 0.06, 0.065], fontsize='xx-large', family='serif')
+        plt.yticks(fontsize='xx-large', family='serif')
+
+        #plt.autoscale()
+
+        plt.savefig(fileNamePing + self.fileSaveName + ".png", dpi=100, bbox_inches='tight')
+
 
         plt.close()
 

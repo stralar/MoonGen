@@ -625,7 +625,7 @@ def bandwidthUDP():
             if startTimeStamp == None:
                 startTimeStamp = float(row[1])
 
-            if (float(row[1]) - startTimeStamp >= 0 and float(row[1]) - startTimeStamp <= 4):
+            if (float(row[1]) - startTimeStamp >= 1 and float(row[1]) - startTimeStamp <= 3):
                 csvArray.append(row)
 
     resultWriteBandwidth = open(fileSaveNameBandwidth, 'w')
