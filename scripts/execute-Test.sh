@@ -9,7 +9,7 @@ moonGenPC="lars@130.75.73.225"
 dagPC="stratmann@130.75.73.131"
 
 
-downlink=true
+downlink=false
 testNumber="13"
 
 destIPAdress="10.1.3.2"
@@ -38,6 +38,7 @@ waitTime=$((dagExecuteTime))
 
 # List from Bandwidth length to test
 rateList="1 5 10 15 20 25 30 35 40 45 50"
+#rateList="30 35 40 45 50"
  #10 50 100"
 # List from latencies to test
 latencyList="10"
@@ -66,7 +67,7 @@ ssh $clientPC 'sudo killall rude' &
 sleep 1
 
 
-moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 38 -l 30 10 -q 350 1100"
+moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 38 -l 30 10 -q 350 1000 -c 0.01 0.01"
 moonGenTerminateCommand="sudo killall MoonGen"
 
 ssh $moonGenPC $moonGenMainCommand &
