@@ -1,0 +1,23 @@
+Nodea:
+10.1.3.3 - MoonGen NIC B4:96:91:43:DD:78
+
+10.1.4.3 - MoonGen NIC B4:96:91:43:DD:79
+
+Nodeb:
+
+nodea(NIC<B4:96:91:43:DD:78>) <-> nodec(NIC<B4:96:91:43:DD:7A>)
+10.1.3.3 <-> 10.1.3.4
+
+
+Client Server Beziehung:
+Der Server Thread in MoonGen benötigt eine IP, somit wird NIC <B4:96:91:43:DD:79> welches die Verbindung zu nodea ist genutzt.
+Und eine IP zugewiesen
+
+nodea <-> nodeb(NIC<B4:96:91:43:DD:79>)
+10.1.4.3 <-> 10.1.4.2
+ 
+ 
+NodeC:
+10.1.3.4 - MoonGen NIC B4:96:91:43:DD:7A
+
+10.1.4.4 - MoonGen NIC B4:96:91:43:DD:7B
