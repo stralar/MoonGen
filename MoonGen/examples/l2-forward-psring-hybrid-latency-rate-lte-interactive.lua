@@ -14,6 +14,11 @@ local namespaces = require "namespaces"
 
 
 local turbo = require("turbo")
+local tcpserver = require("turbo.tcpserver")
+local ioloop = require('turbo.ioloop')
+local json = require("cjson.safe")
+
+
 
 local PKT_SIZE	= 60
 
@@ -475,50 +480,64 @@ end
 function server()
 	print("Server Thread startet")
 
-        local tsc_hz = libmoon:getCyclesFrequency()
-        local tsc_hz_ms = tsc_hz / 1000
+	local tsc_hz = libmoon:getCyclesFrequency()
+	local tsc_hz_ms = tsc_hz / 1000
 
-	--local ExampleHandler = class("ExampleHandler", turbo.websocket.WebSocketHandler)
-	
+	-- create IOLoop
+	local ioloop_instance = ioloop.instance()
 
---	function ExampleHandler:on_message(msg)
---		print("en at the begin")
---		self:write_message("Hello World.")
---		print("end is near")
---	end
-
-	--turbo.web.Application({{"^/$", ExampleHandler}}):listen(8888)
-	--turbo.ioloop.instance():start()
-
-	local TcpHandler = class("TcpHandler", turbo.tcpserver.TCPServer)
-
-	function TcpHandler:handle_stream(stream, address)
-		print("blaa")
-	end
-
-	turbo.tcpserver.TCPServer:initialize(turbo.ioloop.IOLoop:initialize(), false, 500)
+	-- create TCP server
+	tcpserver.TCPServer:initialize(ioloop_instance, false)
 
 
-	turbo.tcpserver.TCPServer(TcpHandler):listen(8888)
-	turbo.tcpserver.TCPServer:start()
+	-- override handle stream from TCPServer
+	function tcpserver.TCPServer:handle_stream(stream, address)
+		print("connection builded:")
+
+		while true and mg.running() do
+			--print("waaaa")
+			if self._started then
+				print("out:")
+				local buf, sz = stream:_read_from_socket()
+				local data = ""
+				if sz ~= nil then
+					for i = 0, sz do
+						--print(string.char(buf[i]))
+						data = data..""..string.char(buf[i])
+					end
+					print(data)
+					local jsondata = json.decode(data)
+
+					if jsondata == nil then
+						print("Data stream is not a json")
+					end
 
 
-	print(turbo.tcpserver.TCPServer._started)
 
 
-	while true and mg.running() do
-		--local data = turbo.ioloop.IOLoop.READ
-		local data = turbo.iostream.IOStream:_read_from_socket()
-		print(data)
-		--tcpserver.TCPServer:handle_stream(turbo.ioloop.IOLoop, address)
-	
-		local last_timestamp = limiter:get_tsc_cycles()
-                while limiter:get_tsc_cycles() < last_timestamp +  tsc_hz_ms * 100 do
-			catchup_mode = false
-			if not mg.running() then
-				return
+				end
+			end
+			-- wait 1 second
+			local last_timestamp = limiter:get_tsc_cycles()
+			while limiter:get_tsc_cycles() < last_timestamp +  tsc_hz_ms * 100 do
+				if not mg.running() then
+					return
+				end
 			end
 		end
+
 	end
+
+	print("start TCP Server")
+
+
+	-- tcp server listen on Port XXXX
+	-- listen(port, address, backlog, family)
+	tcpserver.TCPServer:listen(8888)
+
+	-- start tcp server and ioloop
+	tcpserver.TCPServer:start()
+	ioloop_instance:start()
+
 end
 
