@@ -79,6 +79,7 @@ setx LUA_CPATH "%LUA_CPATH%" /M
 call install.bat /TREE %TURBO_ROCKS% /P %TURBO_LUAROCKS% /INC %TURBO_SRC%\luajit-2.0\src /LIB %TURBO_SRC%\luajit-2.0\src /LUA %TURBO_ROOT% /Q
 call luarocks install luasocket
 call luarocks install luafilesystem
+call luarocks install cjson
 
 echo ===========================
 echo Now compiling LuaSec for SSL support.
