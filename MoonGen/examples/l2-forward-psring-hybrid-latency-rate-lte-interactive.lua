@@ -16,8 +16,8 @@ local namespaces = require "namespaces"
 local turbo = require("turbo")
 local tcpserver = require("turbo.tcpserver")
 local ioloop = require('turbo.ioloop')
-local json = require("cjson.safe")
-
+--local json = require("cjson.safe")
+local json = require("turbo.3rdparty.JSON")
 
 
 local PKT_SIZE	= 60
@@ -506,13 +506,20 @@ function server()
 						data = data..""..string.char(buf[i])
 					end
 					print(data)
-					local jsondata = json.decode(data)
 
-					if jsondata == nil then
-						print("Data stream is not a json")
+					function myerrorhandler(err)
+						print("Error: ")
 					end
 
+					--print(xpcall(json:decode(data), myerrorhandler))
 
+					json:decode(data, myerrorhandler())
+
+					if false then
+						print("Is a json")
+					else
+						print("Is not a json")
+					end
 
 
 				end
