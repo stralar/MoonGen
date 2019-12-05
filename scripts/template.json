@@ -1,0 +1,26 @@
+{
+  "receiving": {
+    "thread": [
+      ]
+  },
+  "forwarding": {
+    "short_DRX_cycle_length": 123,
+    "long_DRX_cycle_length": 123,
+    "active_time": 123,
+    "short_DRX_inactivity_timer": 123,
+    "long_DRX_inactivity_timer": 123,
+    "rcc_idle_cycle_length": 123,
+    "rcc_connection_build_delay": 123,
+    "thread": [
+      {
+        "rate": 123,
+        "latency": 123,
+        "xlatency": 123,
+        "queuedepth": 123,
+        "loss": 0.123,
+        "concealedloss": 0.123,
+        "catchuprate": 123
+      }
+    ]
+  }
+}
