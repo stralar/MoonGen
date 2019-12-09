@@ -483,7 +483,7 @@ function decode_wrapper(data)
 end
 
 
-function server()
+function server(ns2)
 	print("Server Thread startet")
 
 	local tsc_hz = libmoon:getCyclesFrequency()
@@ -511,23 +511,52 @@ function server()
 						--print(string.char(buf[i]))
 						data = data..""..string.char(buf[i])
 					end
-					print(data)
 
 					print("about to test for json")
 					print(data)
 					
 					result = pcall(decode_wrapper, data)
+					decoded_data = nil
 					if result then
 						print("Is a json")
 						decoded_data = decode_wrapper(data)
-						for k, v in pairs(decoded_data) do
-							print(k, v[1], v[2], v[3])
-						end
+                                        	--for k, v in pairs(decoded_data) do
+						--	print(k, v[1], v[2], v[3])
+						--	print(decoded_data[k]["1"])
+						--end
+						-- set changes
+	                                        if decoded_data["forwarding"]["short_DRX_cycle_length"] ~= nil then
+        	                                        print("Set short cycle length: ")
+							print(decoded_data["forwarding"]["short_DRX_cycle_length"])
+                	                        end
+                                                if decoded_data["forwarding"]["long_DRX_cycle_length"] ~= nil then
+                                                        print("Set : long_DRX_cycle_length")
+                                                	print(decoded_data["forwarding"]["long_DRX_cycle_length"])
+						end 
+                                                if decoded_data["forwarding"]["active_time"] ~= nil then
+                                                        print("Set : active_time")
+                                                        print(decoded_data["forwarding"]["active_time"])
+                                                end
+	                                        if decoded_data["forwarding"]["short_DRX_inactivity_timer"] ~= nil then
+                                                        print("Set : short_DRX_inactivity_timer")
+                                                        print(decoded_data["forwarding"]["short_DRX_inactivity_timer"])
+                                                end
+						if decoded_data["forwarding"]["long_DRX_inactivity_timer"] ~= nil then
+                                                        print("Set : short_DRX_inactivity_timer")
+                                                        print(decoded_data["forwarding"]["short_DRX_inactivity_timer"])
+                                                end
+	                                        if decoded_data["forwarding"]["rcc_idle_cycle_length"] ~= nil then
+                                                        print("Set : rcc_idle_cycle_length")
+                                                        print(decoded_data["forwarding"]["rcc_idle_cycle_length"])
+                                                end
+	                                        if decoded_data["forwarding"]["rcc_connection_build_delay"] ~= nil then
+                                                        print("Set : rcc_connection_build_delay")
+                                                        print(decoded_data["forwarding"]["rcc_connection_build_delay"])
+                                                end
 					else
 						print("Is not a json")
 					end
-
-
+					
 				end
 			end
 			-- wait 1 second
@@ -541,21 +570,15 @@ function server()
 
 	end
 
-	print("start TCP Server")
 
 
 	-- tcp server listen on Port XXXX
 	-- listen(port, address, backlog, family)
-	print("server:listen")
 	tcpserver.TCPServer:listen(8888)
-	print("server:listen done")
 
 	-- start tcp server and ioloop
-	print("server:start")
 	tcpserver.TCPServer:start()
-	print("server:ioloop:start")
 	ioloop_instance:start()
 
-	print("++++++++++++++++++exiting server thread")
 end
 
