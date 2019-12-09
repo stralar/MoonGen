@@ -16,7 +16,7 @@ local namespaces = require "namespaces"
 local turbo = require("turbo")
 local tcpserver = require("turbo.tcpserver")
 local ioloop = require('turbo.ioloop')
---local json = require("cjson.safe")
+--local jsons = require("cjson.safe")
 local json = require("turbo.3rdparty.JSON")
 
 
@@ -477,6 +477,12 @@ function ullToNumber(value)
 end
 
 
+function decode_wrapper(data)
+	print("decode_wrapper")
+	return json:decode(data)
+end
+
+
 function server()
 	print("Server Thread startet")
 
@@ -497,7 +503,7 @@ function server()
 		while true and mg.running() do
 			--print("waaaa")
 			if self._started then
-				print("out:")
+				--print("out:")
 				local buf, sz = stream:_read_from_socket()
 				local data = ""
 				if sz ~= nil then
@@ -507,16 +513,16 @@ function server()
 					end
 					print(data)
 
-					function myerrorhandler(err)
-						print("Error: ")
-					end
-
-					--print(xpcall(json:decode(data), myerrorhandler))
-
-					json:decode(data, myerrorhandler())
-
-					if false then
+					print("about to test for json")
+					print(data)
+					
+					result = pcall(decode_wrapper, data)
+					if result then
 						print("Is a json")
+						decoded_data = decode_wrapper(data)
+						for k, v in pairs(decoded_data) do
+							print(k, v[1], v[2], v[3])
+						end
 					else
 						print("Is not a json")
 					end
@@ -540,11 +546,16 @@ function server()
 
 	-- tcp server listen on Port XXXX
 	-- listen(port, address, backlog, family)
+	print("server:listen")
 	tcpserver.TCPServer:listen(8888)
+	print("server:listen done")
 
 	-- start tcp server and ioloop
+	print("server:start")
 	tcpserver.TCPServer:start()
+	print("server:ioloop:start")
 	ioloop_instance:start()
 
+	print("++++++++++++++++++exiting server thread")
 end
 

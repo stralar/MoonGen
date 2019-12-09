@@ -38,7 +38,7 @@ dep_eal_log.o = \
  /usr/include/x86_64-linux-gnu/sys/queue.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_memory.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
- /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/exec-env/rte_dom0_common.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_eal/linuxapp/eal/include/exec-env/rte_dom0_common.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_common.h \
  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h /usr/include/alloca.h \
@@ -85,6 +85,6 @@ dep_eal_log.o = \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_debug.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_log.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_interrupts.h \
- /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/exec-env/rte_interrupts.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_eal/linuxapp/eal/include/exec-env/rte_interrupts.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_dev.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_bus.h

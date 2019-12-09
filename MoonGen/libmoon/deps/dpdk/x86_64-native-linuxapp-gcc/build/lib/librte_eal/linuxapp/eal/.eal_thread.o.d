@@ -72,7 +72,7 @@ dep_eal_thread.o = \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_log.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_memory.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
- /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/exec-env/rte_dom0_common.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_eal/linuxapp/eal/include/exec-env/rte_dom0_common.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_memzone.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_per_lcore.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_eal.h \
@@ -82,7 +82,7 @@ dep_eal_thread.o = \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_pci.h \
  /usr/include/inttypes.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_interrupts.h \
- /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/exec-env/rte_interrupts.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_eal/linuxapp/eal/include/exec-env/rte_interrupts.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_dev.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_bus.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_eal/common/eal_thread.h

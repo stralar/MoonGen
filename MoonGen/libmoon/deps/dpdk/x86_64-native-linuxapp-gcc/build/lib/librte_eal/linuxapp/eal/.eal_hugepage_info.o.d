@@ -58,7 +58,7 @@ dep_eal_hugepage_info.o = \
  /usr/include/x86_64-linux-gnu/sys/queue.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_memory.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_config.h \
- /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/exec-env/rte_dom0_common.h \
+ /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/lib/librte_eal/linuxapp/eal/include/exec-env/rte_dom0_common.h \
  /users/lars/MoonGen/MoonGen/libmoon/deps/dpdk/x86_64-native-linuxapp-gcc/include/rte_common.h \
  /usr/include/ctype.h \
  /usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/limits.h \
