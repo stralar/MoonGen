@@ -488,6 +488,9 @@ function server(ns2)
 
 	local tsc_hz = libmoon:getCyclesFrequency()
 	local tsc_hz_ms = tsc_hz / 1000
+	
+
+	while mg.running() do
 
 	-- create IOLoop
 	local ioloop_instance = ioloop.instance()
@@ -495,14 +498,34 @@ function server(ns2)
 	-- create TCP server
 	tcpserver.TCPServer:initialize(ioloop_instance, false)
 
+	function ioloop_save_close_callback(tcpserver)
+		
+		if not tcpserver.TCPServer._started then
+			self.close()
+		end
+		
+	end
+
 
 	-- override handle stream from TCPServer
 	function tcpserver.TCPServer:handle_stream(stream, address)
 		print("connection builded:")
+		
+		function testcb()
+			print("stream close callback")
+		end
 
-		while true and mg.running() do
+		stream:set_close_callback()
+
+
+		while not stream:closed() and mg.running() do
 			--print("waaaa")
-			if self._started then
+			if stream:closed() then 
+				print("stream closed") 
+				--ioloop_instance:close()
+				self:stop()
+			end
+			if self._started and not stream:closed() then
 				--print("out:")
 				local buf, sz = stream:_read_from_socket()
 				local data = ""
@@ -520,10 +543,9 @@ function server(ns2)
 					if result then
 						print("Is a json")
 						decoded_data = decode_wrapper(data)
-                                        	--for k, v in pairs(decoded_data) do
-						--	print(k, v[1], v[2], v[3])
-						--	print(decoded_data[k]["1"])
-						--end
+
+						-- TODO error handler for wrong format
+
 						-- set changes
 	                                        if decoded_data["forwarding"]["short_DRX_cycle_length"] ~= nil then
         	                                        print("Set short cycle length: ")
@@ -553,12 +575,46 @@ function server(ns2)
                                                         print("Set : rcc_connection_build_delay")
                                                         print(decoded_data["forwarding"]["rcc_connection_build_delay"])
                                                 end
+
+						for k, v in ipairs(decoded_data["forwarding"]["thread"])
+						do
+		                                        if decoded_data["forwarding"]["thread"][k]["rate"] ~= nil then
+        	                                                print("Set : forwarding thread "..k.." rate")
+                	                                        print(decoded_data["forwarding"]["thread"][k]["rate"])
+							end
+		                                        if decoded_data["forwarding"]["thread"][k]["latency"] ~= nil then
+        	                                                print("Set : forwarding thread "..k.." latency")
+                	                                        print(decoded_data["forwarding"]["thread"][k]["latency"])
+							end
+		                                        if decoded_data["forwarding"]["thread"][k]["xlatency"] ~= nil then
+        	                                                print("Set : forwarding thread "..k.." xlatency")
+                	                                        print(decoded_data["forwarding"]["thread"][k]["xlatency"])
+							end
+		                                        if decoded_data["forwarding"]["thread"][k]["queuedepth"] ~= nil then
+        	                                                print("Set : forwarding thread "..k.." queuedepth")
+                	                                        print(decoded_data["forwarding"]["thread"][k]["queuedepth"])
+							end
+		                                        if decoded_data["forwarding"]["thread"][k]["loss"] ~= nil then
+        	                                                print("Set : forwarding thread "..k.." loss")
+                	                                        print(decoded_data["forwarding"]["thread"][k]["loss"])
+							end
+		                                        if decoded_data["forwarding"]["thread"][k]["concealedloss"] ~= nil then
+        	                                                print("Set : forwarding thread "..k.." concealedloss")
+                	                                        print(decoded_data["forwarding"]["thread"][k]["concealedloss"])
+							end
+		                                        if decoded_data["forwarding"]["thread"][k]["catchuprate"] ~= nil then
+        	                                                print("Set : forwarding thread "..k.." catchuprate")
+                	                                        print(decoded_data["forwarding"]["thread"][k]["catchuprate"])
+							end
+						end
+						
 					else
 						print("Is not a json")
 					end
 					
 				end
 			end
+			
 			-- wait 1 second
 			local last_timestamp = limiter:get_tsc_cycles()
 			while limiter:get_tsc_cycles() < last_timestamp +  tsc_hz_ms * 100 do
@@ -567,18 +623,18 @@ function server(ns2)
 				end
 			end
 		end
+		print("Connection lost")
 
 	end
+	
+		-- tcp server listen on Port XXXX
+		-- listen(port, address, backlog, family)
+		tcpserver.TCPServer:listen(8888)
 
-
-
-	-- tcp server listen on Port XXXX
-	-- listen(port, address, backlog, family)
-	tcpserver.TCPServer:listen(8888)
-
-	-- start tcp server and ioloop
-	tcpserver.TCPServer:start()
-	ioloop_instance:start()
+		-- start tcp server and ioloop
+		tcpserver.TCPServer:start()
+		ioloop_instance:start()
+	end
 
 end
 

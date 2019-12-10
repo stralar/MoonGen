@@ -20,6 +20,15 @@
         "loss": "0.123",
         "concealedloss": "0.123",
         "catchuprate": "123"
+      },
+      {
+        "rate": "567",
+        "latency": "567",
+        "xlatency": "567",
+        "queuedepth": "567",
+        "loss": "0.567",
+        "concealedloss": "0.567",
+        "catchuprate": "567"
       }
     ]
   }
