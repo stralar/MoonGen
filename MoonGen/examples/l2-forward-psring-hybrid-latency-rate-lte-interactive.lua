@@ -474,7 +474,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
                 end
             end
         end
-
 	end
 end
 
@@ -521,16 +520,17 @@ function server(ns)
 	-- override handle stream from TCPServer
 	function tcpserver.TCPServer:handle_stream(stream, address)
 		print("connection builded:")
-		
-		function testcb()
-			print("stream close callback")
-		end
-		print(ns.thread[1].latency)
-		print(ns.thread[2].latency)
-		print(ns.thread1[1].test)
-		ns.thread1 = {{test = 777}, {test2 = 999}}
-		ns.thread[1].latency = tonumber(53)
-		ns.thread[2].latency = tonumber(53)
+
+		local changed_data = {{rate = ns.thread[1].rate, latency = ns.thread[1].latency,  xlatency = ns.thread[1].xlatency,  loss = ns.thread[1].loss,  concealedloss = ns.thread[1].concealedloss,  catchuprate = ns.thread[1].catchuprate}, {rate = args.rate[2], latency = ns.thread[2].latency,  xlatency = ns.thread[2].xlatency,  loss = ns.thread[2].loss,  concealedloss = ns.thread[2].concealedloss,  catchuprate = ns.thread[2].catchuprate}}
+
+		print(changed_data[1].rate)
+		changed_data[1].rate = 777
+		print(changed_data[1].rate)
+
+		print(ns.thread[1].rate)
+		ns.thread = changed_data
+		print(ns.thread[1].rate)
+
 		while not stream:closed() and mg.running() do
 			--print("waaaa")
 			if stream:closed() then 
