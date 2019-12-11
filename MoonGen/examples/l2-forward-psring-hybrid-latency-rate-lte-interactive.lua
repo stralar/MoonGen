@@ -82,11 +82,20 @@ function master(args)
 	local ring2 = pipe:newPktsizedRing(qdepth2)
 
 	local ns = namespaces:get()
+	
+	-- new for TCP server/client
+	--local ns2 = namespace.get()
 
+	--ns2.thread = {key1 = false}
+	ns.thread1 = {rate = args.rate[1], latency = args.latency[1],  xlatency = args.xlatency[1],  loss = args.loss[1],  concealedloss = args.concealedloss[1],  catchuprate = args.catchuprate[1]}
+
+	ns.thread2 = {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  loss = args.loss[2],  concealedloss = args.concealedloss[2],  catchuprate = args.catchuprate[2]}
 
 	-- start the forwarding tasks
 	for i = 1, args.threads do
-		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], args.rate[1], args.latency[1], args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1],
+		
+
+		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], ns.thread1.rate, ns.thread1.latency, args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1],
 			args.short_DRX_cycle_length, args.long_DRX_cycle_length, args.active_time, args.continuous_reception_inactivity_timer, args.short_DRX_inactivity_timer, args.long_DRX_inactivity_timer, args.rcc_idle_cycle_length, args.rcc_connection_build_delay)
 		if args.dev[1] ~= args.dev[2] then
 			mg.startTask("forward", 2, ns, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2],
@@ -104,7 +113,7 @@ function master(args)
 	end
 	
 	--start the server thread
-	mg.startTask("server")
+	mg.startTask("server", ns)
 
 
 	mg.waitForTasks()
@@ -483,7 +492,7 @@ function decode_wrapper(data)
 end
 
 
-function server(ns2)
+function server(ns)
 	print("Server Thread startet")
 
 	local tsc_hz = libmoon:getCyclesFrequency()
@@ -498,14 +507,7 @@ function server(ns2)
 	-- create TCP server
 	tcpserver.TCPServer:initialize(ioloop_instance, false)
 
-	function ioloop_save_close_callback(tcpserver)
 		
-		if not tcpserver.TCPServer._started then
-			self.close()
-		end
-		
-	end
-
 
 	-- override handle stream from TCPServer
 	function tcpserver.TCPServer:handle_stream(stream, address)
@@ -581,10 +583,12 @@ function server(ns2)
 		                                        if decoded_data["forwarding"]["thread"][k]["rate"] ~= nil then
         	                                                print("Set : forwarding thread "..k.." rate")
                 	                                        print(decoded_data["forwarding"]["thread"][k]["rate"])
+								ns.thread1.rate = tonumber(decoded_data["forwarding"]["thread"][k]["rate"])
 							end
 		                                        if decoded_data["forwarding"]["thread"][k]["latency"] ~= nil then
         	                                                print("Set : forwarding thread "..k.." latency")
                 	                                        print(decoded_data["forwarding"]["thread"][k]["latency"])
+								ns.thread1.latency = tonumber(decoded_data["forwarding"]["thread"][k]["latency"])
 							end
 		                                        if decoded_data["forwarding"]["thread"][k]["xlatency"] ~= nil then
         	                                                print("Set : forwarding thread "..k.." xlatency")
