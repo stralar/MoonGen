@@ -87,15 +87,17 @@ function master(args)
 	--local ns2 = namespace.get()
 
 	--ns2.thread = {key1 = false}
-	ns.thread1 = {rate = args.rate[1], latency = args.latency[1],  xlatency = args.xlatency[1],  loss = args.loss[1],  concealedloss = args.concealedloss[1],  catchuprate = args.catchuprate[1]}
+	ns.thread = {{rate = args.rate[1], latency = args.latency[1],  xlatency = args.xlatency[1],  loss = args.loss[1],  concealedloss = args.concealedloss[1],  catchuprate = args.catchuprate[1]}, {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  loss = args.loss[2],  concealedloss = args.concealedloss[2],  catchuprate = args.catchuprate[2]}}
 
-	ns.thread2 = {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  loss = args.loss[2],  concealedloss = args.concealedloss[2],  catchuprate = args.catchuprate[2]}
+	ns.thread1 = {{test = 666}, {test2 = 888}}
+
+	--ns.thread2 = {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  loss = args.loss[2],  concealedloss = args.concealedloss[2],  catchuprate = args.catchuprate[2]}
 
 	-- start the forwarding tasks
 	for i = 1, args.threads do
 		
 
-		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], ns.thread1.rate, ns.thread1.latency, args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1],
+		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], ns.thread[1].rate, ns.thread[1].latency, args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1],
 			args.short_DRX_cycle_length, args.long_DRX_cycle_length, args.active_time, args.continuous_reception_inactivity_timer, args.short_DRX_inactivity_timer, args.long_DRX_inactivity_timer, args.rcc_idle_cycle_length, args.rcc_connection_build_delay)
 		if args.dev[1] ~= args.dev[2] then
 			mg.startTask("forward", 2, ns, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2],
@@ -265,7 +267,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				end
 
 				local send_time = arrival_timestamp
-				send_time = send_time + ((closses*concealed_resend_time + latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
+				--send_time = send_time + ((closses*concealed_resend_time + latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
+				print(ns.thread[threadNumber].latency)
+				send_time = send_time + ((closses*concealed_resend_time + ns.thread[threadNumber].latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
 
 				time_stuck_in_loop = 0
 
@@ -491,6 +495,9 @@ function decode_wrapper(data)
 	return json:decode(data)
 end
 
+function change_ns(ns)
+	ns.thread[1].latency = 44
+end
 
 function server(ns)
 	print("Server Thread startet")
@@ -507,6 +514,8 @@ function server(ns)
 	-- create TCP server
 	tcpserver.TCPServer:initialize(ioloop_instance, false)
 
+
+
 		
 
 	-- override handle stream from TCPServer
@@ -516,10 +525,12 @@ function server(ns)
 		function testcb()
 			print("stream close callback")
 		end
-
-		stream:set_close_callback()
-
-
+		print(ns.thread[1].latency)
+		print(ns.thread[2].latency)
+		print(ns.thread1[1].test)
+		ns.thread1 = {{test = 777}, {test2 = 999}}
+		ns.thread[1].latency = tonumber(53)
+		ns.thread[2].latency = tonumber(53)
 		while not stream:closed() and mg.running() do
 			--print("waaaa")
 			if stream:closed() then 
@@ -583,12 +594,12 @@ function server(ns)
 		                                        if decoded_data["forwarding"]["thread"][k]["rate"] ~= nil then
         	                                                print("Set : forwarding thread "..k.." rate")
                 	                                        print(decoded_data["forwarding"]["thread"][k]["rate"])
-								ns.thread1.rate = tonumber(decoded_data["forwarding"]["thread"][k]["rate"])
+								ns.thread[k].rate = tonumber(decoded_data["forwarding"]["thread"][k]["rate"])
 							end
 		                                        if decoded_data["forwarding"]["thread"][k]["latency"] ~= nil then
         	                                                print("Set : forwarding thread "..k.." latency")
                 	                                        print(decoded_data["forwarding"]["thread"][k]["latency"])
-								ns.thread1.latency = tonumber(decoded_data["forwarding"]["thread"][k]["latency"])
+								ns.thread[k].latency = tonumber(decoded_data["forwarding"]["thread"][k]["latency"])
 							end
 		                                        if decoded_data["forwarding"]["thread"][k]["xlatency"] ~= nil then
         	                                                print("Set : forwarding thread "..k.." xlatency")
