@@ -82,16 +82,18 @@ function master(args)
 	local ring2 = pipe:newPktsizedRing(qdepth2)
 
 	local ns = namespaces:get()
-	
-	-- new for TCP server/client
-	--local ns2 = namespace.get()
 
-	--ns2.thread = {key1 = false}
+	ns.short_DRX_cycle_length = args.short_DRX_cycle_length
+	ns.long_DRX_cycle_length = args.long_DRX_cycle_length
+	ns.active_time = args.active_time
+	ns.continuous_reception_inactivity_timer = args.continuous_reception_inactivity_timer
+	ns.short_DRX_inactivity_timer =  args.short_DRX_inactivity_timer
+	ns.long_DRX_inactivity_timer = args.long_DRX_inactivity_timer
+	ns.rcc_idle_cycle_length = args.rcc_idle_cycle_length
+	ns.rcc_connection_build_delay = args.rcc_connection_build_delay
+
 	ns.thread = {{rate = args.rate[1], latency = args.latency[1],  xlatency = args.xlatency[1],  loss = args.loss[1],  concealedloss = args.concealedloss[1],  catchuprate = args.catchuprate[1]}, {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  loss = args.loss[2],  concealedloss = args.concealedloss[2],  catchuprate = args.catchuprate[2]}}
 
-	ns.thread1 = {{test = 666}, {test2 = 888}}
-
-	--ns.thread2 = {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  loss = args.loss[2],  concealedloss = args.concealedloss[2],  catchuprate = args.catchuprate[2]}
 
 	-- start the forwarding tasks
 	for i = 1, args.threads do
@@ -99,7 +101,7 @@ function master(args)
 
 		mg.startTask("forward", 1, ns, ring1, args.dev[1]:getTxQueue(i - 1), args.dev[1], ns.thread[1].rate, ns.thread[1].latency, args.xlatency[1], args.loss[1], args.concealedloss[1], args.catchuprate[1],
 			args.short_DRX_cycle_length, args.long_DRX_cycle_length, args.active_time, args.continuous_reception_inactivity_timer, args.short_DRX_inactivity_timer, args.long_DRX_inactivity_timer, args.rcc_idle_cycle_length, args.rcc_connection_build_delay)
-		if args.dev[1] ~= args.dev[2] then
+			if args.dev[1] ~= args.dev[2] then
 			mg.startTask("forward", 2, ns, ring2, args.dev[2]:getTxQueue(i - 1), args.dev[2], args.rate[2], args.latency[2], args.xlatency[2], args.loss[2], args.concealedloss[2], args.catchuprate[2],
 					args.short_DRX_cycle_length, args.long_DRX_cycle_length, args.active_time, args.continuous_reception_inactivity_timer, args.short_DRX_inactivity_timer, args.long_DRX_inactivity_timer, args.rcc_idle_cycle_length, args.rcc_connection_build_delay)
 
@@ -158,7 +160,7 @@ end
 
 function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate,
 				 short_DRX_cycle_length, long_DRX_cycle_length, active_time, continuous_reception_inactivity_timer, short_DRX_inactivity_timer, long_DRX_inactivity_timer, rcc_idle_cycle_length, rcc_connection_build_delay)
-	print("forward with rate "..rate.." and latency "..latency.." and loss rate "..lossrate.." and clossrate "..clossrate.." and catchuprate "..catchuprate)
+	print("forward with rate "..ns.thread[threadNumber].rate.." and latency "..ns.thread[threadNumber].latency.." and loss rate "..ns.thread[threadNumber].lossrate.." and clossrate "..ns.thread[threadNumber].clossrate.." and catchuprate "..ns.thread[threadNumber].catchuprate)
 	local numThreads = 1
 
 	local linkspeed = txDev:getLinkStatus().speed
@@ -252,15 +254,15 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				--local arrival_timestamp = buf:getTimestamp()
 				local arrival_timestamp = buf.udata64
 				local extraDelay = 0.0
-				if (xlatency > 0) then
-					extraDelay = -math.log(math.random())*xlatency
+				if (ns.thread[threadNumber].xlatency > 0) then
+					extraDelay = -math.log(math.random())*ns.thread[threadNumber].xlatency
 				end
 
 				-- emulate concealed losses
 				local closses = 0.0
-				while (math.random() < clossrate) do
+				while (math.random() < ns.thread[threadNumber].clossrate) do
 					closses = closses + 1
-					if (catchuprate > 0) then
+					if (ns.thread[threadNumber].catchuprate > 0) then
 						catchup_mode = true
 						--print "entering catchup mode!"
 					end
@@ -284,16 +286,16 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				local pktSize = buf.pkt_len + 24
 				if (catchup_mode) then
-					buf:setDelay((pktSize) * (linkspeed/catchuprate - 1))
+					buf:setDelay((pktSize) * (linkspeed/ns.thread[threadNumber].catchuprate - 1))
 				else
-					buf:setDelay((pktSize) * (linkspeed/rate - 1))
+					buf:setDelay((pktSize) * (linkspeed/ns.thread[threadNumber].rate - 1))
 				end
 			end
 
 			if count > 0 then
 
 				-- the rate here doesn't affect the result afaict.  It's just to help decide the size of the bad pkts
-				txQueue:sendWithDelayLoss(bufs, rate * numThreads, lossrate, count)
+				txQueue:sendWithDelayLoss(bufs, ns.thread[threadNumber].rate * numThreads, ns.thread[threadNumber].lossrate, count)
 
 				last_activity = limiter:get_tsc_cycles()
 				ns.last_packet_time = ullToNumber(limiter:get_tsc_cycles())
@@ -518,16 +520,8 @@ function server(ns)
 			local changed_data = {{rate = ns.thread[1].rate, latency = ns.thread[1].latency,  xlatency = ns.thread[1].xlatency,  loss = ns.thread[1].loss,  concealedloss = ns.thread[1].concealedloss,  catchuprate = ns.thread[1].catchuprate},
 								  {rate = ns.thread[2].rate, latency = ns.thread[2].latency,  xlatency = ns.thread[2].xlatency,  loss = ns.thread[2].loss,  concealedloss = ns.thread[2].concealedloss,  catchuprate = ns.thread[2].catchuprate}}
 
-			print(changed_data[1].rate)
-			changed_data[1].rate = 777
-			print(changed_data[1].rate)
-
-			print(ns.thread[1].rate)
-			ns.thread = changed_data
-			print(ns.thread[1].rate)
-
 			while not stream:closed() and mg.running() do
-				--print("waaaa")
+
 				if stream:closed() then
 					print("stream closed")
 					--ioloop_instance:close()
@@ -558,31 +552,43 @@ function server(ns)
 							if decoded_data["forwarding"]["short_DRX_cycle_length"] ~= nil then
 								print("Set short cycle length: ")
 								print(decoded_data["forwarding"]["short_DRX_cycle_length"])
+								ns.short_DRX_cycle_length = tonumber(decoded_data["forwarding"]["short_DRX_cycle_length"])
 							end
 							if decoded_data["forwarding"]["long_DRX_cycle_length"] ~= nil then
 								print("Set : long_DRX_cycle_length")
 								print(decoded_data["forwarding"]["long_DRX_cycle_length"])
+								ns.long_DRX_cycle_length = tonumber(decoded_data["forwarding"]["long_DRX_cycle_length"])
 							end
 							if decoded_data["forwarding"]["active_time"] ~= nil then
 								print("Set : active_time")
 								print(decoded_data["forwarding"]["active_time"])
+								ns.active_time = tonumber(decoded_data["forwarding"]["active_time"])
+							end
+							if decoded_data["forwarding"]["continuous_reception_inactivity_timer"] ~= nil then
+								print("Set : continuous_reception_inactivity_timer")
+								print(decoded_data["forwarding"]["continuous_reception_inactivity_timer"])
+								ns.ns.continuous_reception_inactivity_timer = tonumber(decoded_data["forwarding"]["continuous_reception_inactivity_timer"])
 							end
 							if decoded_data["forwarding"]["short_DRX_inactivity_timer"] ~= nil then
 								print("Set : short_DRX_inactivity_timer")
 								print(decoded_data["forwarding"]["short_DRX_inactivity_timer"])
+								ns.short_DRX_inactivity_timer = tonumber(decoded_data["forwarding"]["short_DRX_inactivity_timer"])
 							end
 							if decoded_data["forwarding"]["long_DRX_inactivity_timer"] ~= nil then
 								print("Set : short_DRX_inactivity_timer")
 								print(decoded_data["forwarding"]["short_DRX_inactivity_timer"])
-								end
+								ns.long_DRX_inactivity_timer = tonumber(decoded_data["forwarding"]["long_DRX_inactivity_timer"])
+							end
 							if decoded_data["forwarding"]["rcc_idle_cycle_length"] ~= nil then
 								print("Set : rcc_idle_cycle_length")
 								print(decoded_data["forwarding"]["rcc_idle_cycle_length"])
-								end
+								ns.rcc_idle_cycle_length = tonumber(decoded_data["forwarding"]["rcc_idle_cycle_length"])
+							end
 							if decoded_data["forwarding"]["rcc_connection_build_delay"] ~= nil then
 								print("Set : rcc_connection_build_delay")
 								print(decoded_data["forwarding"]["rcc_connection_build_delay"])
-								end
+								ns.rcc_connection_build_delay = tonumber(decoded_data["forwarding"]["rcc_connection_build_delay"])
+							end
 
 							for k, v in ipairs(decoded_data["forwarding"]["thread"])
 							do
@@ -599,22 +605,27 @@ function server(ns)
 								if decoded_data["forwarding"]["thread"][k]["xlatency"] ~= nil then
 									print("Set : forwarding thread "..k.." xlatency")
 									print(decoded_data["forwarding"]["thread"][k]["xlatency"])
+									changed_data[k].xlatency = tonumber(decoded_data["forwarding"]["thread"][k]["xlatency"])
 								end
 								if decoded_data["forwarding"]["thread"][k]["queuedepth"] ~= nil then
 									print("Set : forwarding thread "..k.." queuedepth")
 									print(decoded_data["forwarding"]["thread"][k]["queuedepth"])
+									changed_data[k].queuedepth = tonumber(decoded_data["forwarding"]["thread"][k]["queuedepth"])
 								end
 								if decoded_data["forwarding"]["thread"][k]["loss"] ~= nil then
 									print("Set : forwarding thread "..k.." loss")
 									print(decoded_data["forwarding"]["thread"][k]["loss"])
+									changed_data[k].loss = tonumber(decoded_data["forwarding"]["thread"][k]["loss"])
 								end
 								if decoded_data["forwarding"]["thread"][k]["concealedloss"] ~= nil then
 									print("Set : forwarding thread "..k.." concealedloss")
 									print(decoded_data["forwarding"]["thread"][k]["concealedloss"])
+									changed_data[k].concealedloss = tonumber(decoded_data["forwarding"]["thread"][k]["concealedloss"])
 								end
 								if decoded_data["forwarding"]["thread"][k]["catchuprate"] ~= nil then
 									print("Set : forwarding thread "..k.." catchuprate")
 									print(decoded_data["forwarding"]["thread"][k]["catchuprate"])
+									changed_data[k].catchuprate = tonumber(decoded_data["forwarding"]["thread"][k]["catchuprate"])
 								end
 							end
 							-- write changes to the namespace variable
