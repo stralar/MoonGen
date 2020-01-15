@@ -1,35 +1,27 @@
 {
-  "receiving": {
-    "thread": [
-      ]
-  },
-  "forwarding": {
-    "short_DRX_cycle_length": "123",
-    "long_DRX_cycle_length": "123",
-    "active_time": "123",
-    "short_DRX_inactivity_timer": "123",
-    "long_DRX_inactivity_timer": "123",
-    "rcc_idle_cycle_length": "123",
-    "rcc_connection_build_delay": "123",
-    "thread": [
-      {
-        "rate": "123",
-        "latency": "123",
-        "xlatency": "123",
-        "queuedepth": "123",
-        "loss": "0.123",
-        "concealedloss": "0.123",
-        "catchuprate": "123"
-      },
-      {
-        "rate": "567",
-        "latency": "567",
-        "xlatency": "567",
-        "queuedepth": "567",
-        "loss": "0.567",
-        "concealedloss": "0.567",
-        "catchuprate": "567"
-      }
-    ]
-  }
+
+  "short_DRX_cycle_length": "123",
+  "long_DRX_cycle_length": "123",
+  "active_time": "123",
+  "short_DRX_inactivity_timer": "123",
+  "long_DRX_inactivity_timer": "123",
+  "rcc_idle_cycle_length": "123",
+  "rcc_connection_build_delay": "123",
+
+  "thread1_rate": "123",
+  "thread1_latency": "123",
+  "thread1_xlatency": "123",
+  "thread1_queuedepth": "123",
+  "thread1_loss": "0.123",
+  "thread1_concealedloss": "0.123",
+  "thread1_catchuprate": "123",
+
+  "thread2_rate": "567",
+  "thread2_latency": "567",
+  "thread2_xlatency": "567",
+  "thread2_queuedepth": "567",
+  "thread2_loss": "0.567",
+  "thread2_concealedloss": "0.567",
+  "thread2_catchuprate": "567"
+
 }

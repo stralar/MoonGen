@@ -497,7 +497,7 @@ class CCDF():
 
         self.legend = ["inter-packet-time = 0.01s", "inter-packet-time = 0.2s", "inter-packet-time = 0.3s", "inter-packet-time = 2.5", "inter-packet-time = 2.6s", "inter-packet-time = 10.5s", "inter-packet-time = 10.6s", "inter-packet-time = 11s"]
 
-        plt.legend(self.legend)
+        plt.legend(self.legendipde)
 
 
         plt.yscale('log')

@@ -549,85 +549,120 @@ function server(ns)
 							-- TODO error handler for wrong format
 
 							-- set changes
-							if decoded_data["forwarding"]["short_DRX_cycle_length"] ~= nil then
+							if decoded_data["short_DRX_cycle_length"] ~= nil then
 								print("Set short cycle length: ")
-								print(decoded_data["forwarding"]["short_DRX_cycle_length"])
-								ns.short_DRX_cycle_length = tonumber(decoded_data["forwarding"]["short_DRX_cycle_length"])
+								print(decoded_data["short_DRX_cycle_length"])
+								ns.short_DRX_cycle_length = tonumber(decoded_data["short_DRX_cycle_length"])
 							end
-							if decoded_data["forwarding"]["long_DRX_cycle_length"] ~= nil then
+							if decoded_data["long_DRX_cycle_length"] ~= nil then
 								print("Set : long_DRX_cycle_length")
-								print(decoded_data["forwarding"]["long_DRX_cycle_length"])
-								ns.long_DRX_cycle_length = tonumber(decoded_data["forwarding"]["long_DRX_cycle_length"])
+								print(decoded_data["long_DRX_cycle_length"])
+								ns.long_DRX_cycle_length = tonumber(decoded_data["long_DRX_cycle_length"])
 							end
-							if decoded_data["forwarding"]["active_time"] ~= nil then
+							if decoded_data["active_time"] ~= nil then
 								print("Set : active_time")
-								print(decoded_data["forwarding"]["active_time"])
-								ns.active_time = tonumber(decoded_data["forwarding"]["active_time"])
+								print(decoded_data["active_time"])
+								ns.active_time = tonumber(decoded_data["active_time"])
 							end
-							if decoded_data["forwarding"]["continuous_reception_inactivity_timer"] ~= nil then
+							if decoded_data["continuous_reception_inactivity_timer"] ~= nil then
 								print("Set : continuous_reception_inactivity_timer")
-								print(decoded_data["forwarding"]["continuous_reception_inactivity_timer"])
-								ns.ns.continuous_reception_inactivity_timer = tonumber(decoded_data["forwarding"]["continuous_reception_inactivity_timer"])
+								print(decoded_data["continuous_reception_inactivity_timer"])
+								ns.ns.continuous_reception_inactivity_timer = tonumber(decoded_data["continuous_reception_inactivity_timer"])
 							end
-							if decoded_data["forwarding"]["short_DRX_inactivity_timer"] ~= nil then
+							if decoded_data["short_DRX_inactivity_timer"] ~= nil then
 								print("Set : short_DRX_inactivity_timer")
-								print(decoded_data["forwarding"]["short_DRX_inactivity_timer"])
-								ns.short_DRX_inactivity_timer = tonumber(decoded_data["forwarding"]["short_DRX_inactivity_timer"])
+								print(decoded_data["short_DRX_inactivity_timer"])
+								ns.short_DRX_inactivity_timer = tonumber(decoded_data["short_DRX_inactivity_timer"])
 							end
-							if decoded_data["forwarding"]["long_DRX_inactivity_timer"] ~= nil then
+							if decoded_data["long_DRX_inactivity_timer"] ~= nil then
 								print("Set : short_DRX_inactivity_timer")
-								print(decoded_data["forwarding"]["short_DRX_inactivity_timer"])
-								ns.long_DRX_inactivity_timer = tonumber(decoded_data["forwarding"]["long_DRX_inactivity_timer"])
+								print(decoded_data["short_DRX_inactivity_timer"])
+								ns.long_DRX_inactivity_timer = tonumber(decoded_data["long_DRX_inactivity_timer"])
 							end
-							if decoded_data["forwarding"]["rcc_idle_cycle_length"] ~= nil then
+							if decoded_data["rcc_idle_cycle_length"] ~= nil then
 								print("Set : rcc_idle_cycle_length")
-								print(decoded_data["forwarding"]["rcc_idle_cycle_length"])
-								ns.rcc_idle_cycle_length = tonumber(decoded_data["forwarding"]["rcc_idle_cycle_length"])
+								print(decoded_data["rcc_idle_cycle_length"])
+								ns.rcc_idle_cycle_length = tonumber(decoded_data["rcc_idle_cycle_length"])
 							end
-							if decoded_data["forwarding"]["rcc_connection_build_delay"] ~= nil then
+							if decoded_data["rcc_connection_build_delay"] ~= nil then
 								print("Set : rcc_connection_build_delay")
-								print(decoded_data["forwarding"]["rcc_connection_build_delay"])
-								ns.rcc_connection_build_delay = tonumber(decoded_data["forwarding"]["rcc_connection_build_delay"])
+								print(decoded_data["rcc_connection_build_delay"])
+								ns.rcc_connection_build_delay = tonumber(decoded_data["rcc_connection_build_delay"])
 							end
 
-							for k, v in ipairs(decoded_data["forwarding"]["thread"])
-							do
-								if decoded_data["forwarding"]["thread"][k]["rate"] ~= nil then
-									print("Set : forwarding thread "..k.." rate")
-									print(decoded_data["forwarding"]["thread"][k]["rate"])
-									changed_data[k].rate = tonumber(decoded_data["forwarding"]["thread"][k]["rate"])
-								end
-								if decoded_data["forwarding"]["thread"][k]["latency"] ~= nil then
-									print("Set : forwarding thread "..k.." latency")
-									print(decoded_data["forwarding"]["thread"][k]["latency"])
-									changed_data[k].latency = tonumber(decoded_data["forwarding"]["thread"][k]["latency"])
-								end
-								if decoded_data["forwarding"]["thread"][k]["xlatency"] ~= nil then
-									print("Set : forwarding thread "..k.." xlatency")
-									print(decoded_data["forwarding"]["thread"][k]["xlatency"])
-									changed_data[k].xlatency = tonumber(decoded_data["forwarding"]["thread"][k]["xlatency"])
-								end
-								if decoded_data["forwarding"]["thread"][k]["queuedepth"] ~= nil then
-									print("Set : forwarding thread "..k.." queuedepth")
-									print(decoded_data["forwarding"]["thread"][k]["queuedepth"])
-									changed_data[k].queuedepth = tonumber(decoded_data["forwarding"]["thread"][k]["queuedepth"])
-								end
-								if decoded_data["forwarding"]["thread"][k]["loss"] ~= nil then
-									print("Set : forwarding thread "..k.." loss")
-									print(decoded_data["forwarding"]["thread"][k]["loss"])
-									changed_data[k].loss = tonumber(decoded_data["forwarding"]["thread"][k]["loss"])
-								end
-								if decoded_data["forwarding"]["thread"][k]["concealedloss"] ~= nil then
-									print("Set : forwarding thread "..k.." concealedloss")
-									print(decoded_data["forwarding"]["thread"][k]["concealedloss"])
-									changed_data[k].concealedloss = tonumber(decoded_data["forwarding"]["thread"][k]["concealedloss"])
-								end
-								if decoded_data["forwarding"]["thread"][k]["catchuprate"] ~= nil then
-									print("Set : forwarding thread "..k.." catchuprate")
-									print(decoded_data["forwarding"]["thread"][k]["catchuprate"])
-									changed_data[k].catchuprate = tonumber(decoded_data["forwarding"]["thread"][k]["catchuprate"])
-								end
+							if decoded_data["thread1_rate"] ~= nil then
+								print("Set : forwarding thread 1 rate")
+								print(decoded_data["thread1_rate"])
+								changed_data[1].rate = tonumber(decoded_data["thread1_rate"])
 							end
+							if decoded_data["thread1_latency"] ~= nil then
+								print("Set : forwarding thread 1 latency")
+								print(decoded_data["thread1_latency"])
+								changed_data[1].latency = tonumber(decoded_data["thread1_latency"])
+							end
+							if decoded_data["thread1_xlatency"] ~= nil then
+								print("Set : forwarding thread 1 xlatency")
+								print(decoded_data["thread1_xlatency"])
+								changed_data[1].xlatency = tonumber(decoded_data["thread1_xlatency"])
+							end
+							if decoded_data["thread1_queuedepth"] ~= nil then
+								print("Set : forwarding thread 1 queuedepth")
+								print(decoded_data["thread1_queuedepth"])
+								changed_data[1].queuedepth = tonumber(decoded_data["thread1_queuedepth"])
+							end
+							if decoded_data["thread1_loss"] ~= nil then
+								print("Set : forwarding thread 1 loss")
+								print(decoded_data["thread1_loss"])
+								changed_data[1].loss = tonumber(decoded_data["thread1_loss"])
+							end
+							if decoded_data["thread1_concealedloss"] ~= nil then
+								print("Set : forwarding thread 1 concealedloss")
+								print(decoded_data["thread1_concealedloss"])
+								changed_data[1].concealedloss = tonumber(decoded_data["thread1_concealedloss"])
+							end
+							if decoded_data["thread1_catchuprate"] ~= nil then
+								print("Set : forwarding thread 1 catchuprate")
+								print(decoded_data["thread1_catchuprate"])
+								changed_data[1].catchuprate = tonumber(decoded_data["thread1_catchuprate"])
+							end
+
+
+							if decoded_data["thread2_rate"] ~= nil then
+								print("Set : forwarding thread 1 rate")
+								print(decoded_data["thread2_rate"])
+								changed_data[2].rate = tonumber(decoded_data["thread2_rate"])
+							end
+							if decoded_data["thread2_latency"] ~= nil then
+								print("Set : forwarding thread 2 latency")
+								print(decoded_data["thread2_latency"])
+								changed_data[2].latency = tonumber(decoded_data["thread2_latency"])
+							end
+							if decoded_data["thread2_xlatency"] ~= nil then
+								print("Set : forwarding thread 2 xlatency")
+								print(decoded_data["thread2_xlatency"])
+								changed_data[2].xlatency = tonumber(decoded_data["thread2_xlatency"])
+							end
+							if decoded_data["thread2_queuedepth"] ~= nil then
+								print("Set : forwarding thread 2 queuedepth")
+								print(decoded_data["thread2_queuedepth"])
+								changed_data[2].queuedepth = tonumber(decoded_data["thread2_queuedepth"])
+							end
+							if decoded_data["thread2_loss"] ~= nil then
+								print("Set : forwarding thread 2 loss")
+								print(decoded_data["thread2_loss"])
+								changed_data[2].loss = tonumber(decoded_data["thread2_loss"])
+							end
+							if decoded_data["thread2_concealedloss"] ~= nil then
+								print("Set : forwarding thread 2 concealedloss")
+								print(decoded_data["thread2_concealedloss"])
+								changed_data[2].concealedloss = tonumber(decoded_data["thread2_concealedloss"])
+							end
+							if decoded_data["thread2_catchuprate"] ~= nil then
+								print("Set : forwarding thread 2 catchuprate")
+								print(decoded_data["thread2_catchuprate"])
+								changed_data[2].catchuprate = tonumber(decoded_data["thread2_catchuprate"])
+							end
+
 							-- write changes to the namespace variable
 							ns.thread = changed_data
 						else
