@@ -92,7 +92,8 @@ function master(args)
 	ns.rcc_idle_cycle_length = args.rcc_idle_cycle_length
 	ns.rcc_connection_build_delay = args.rcc_connection_build_delay
 
-	ns.thread = {{rate = args.rate[1], latency = args.latency[1],  xlatency = args.xlatency[1],  lossrate = args.loss[1],  clossrate = args.concealedloss[1],  catchuprate = args.catchuprate[1]}, {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  lossrate = args.loss[2],  clossrate = args.concealedloss[2],  catchuprate = args.catchuprate[2]}}
+	ns.thread = {{rate = args.rate[1], latency = args.latency[1],  xlatency = args.xlatency[1],  lossrate = args.loss[1],  clossrate = args.concealedloss[1],  catchuprate = args.catchuprate[1]},
+				 {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  lossrate = args.loss[2],  clossrate = args.concealedloss[2],  catchuprate = args.catchuprate[2]}}
 
 
 	-- start the forwarding tasks
@@ -517,8 +518,8 @@ function server(ns)
 		function tcpserver.TCPServer:handle_stream(stream, address)
 			print("connection builded:")
 
-			local changed_data = {{rate = ns.thread[1].rate, latency = ns.thread[1].latency,  xlatency = ns.thread[1].xlatency,  loss = ns.thread[1].loss,  concealedloss = ns.thread[1].concealedloss,  catchuprate = ns.thread[1].catchuprate},
-								  {rate = ns.thread[2].rate, latency = ns.thread[2].latency,  xlatency = ns.thread[2].xlatency,  loss = ns.thread[2].loss,  concealedloss = ns.thread[2].concealedloss,  catchuprate = ns.thread[2].catchuprate}}
+			local changed_data = {{rate = ns.thread[1].rate, latency = ns.thread[1].latency,  xlatency = ns.thread[1].xlatency,  lossrate = ns.thread[1].loss,  clossrate = ns.thread[1].concealedloss,  catchuprate = ns.thread[1].catchuprate},
+								  {rate = ns.thread[2].rate, latency = ns.thread[2].latency,  xlatency = ns.thread[2].xlatency,  lossrate = ns.thread[2].loss,  clossrate = ns.thread[2].concealedloss,  catchuprate = ns.thread[2].catchuprate}}
 
 			while not stream:closed() and mg.running() do
 
@@ -613,12 +614,12 @@ function server(ns)
 							if decoded_data["thread1_loss"] ~= nil then
 								print("Set : forwarding thread 1 loss")
 								print(decoded_data["thread1_loss"])
-								changed_data[1].loss = tonumber(decoded_data["thread1_loss"])
+								changed_data[1].lossrate = tonumber(decoded_data["thread1_loss"])
 							end
 							if decoded_data["thread1_concealedloss"] ~= nil then
 								print("Set : forwarding thread 1 concealedloss")
 								print(decoded_data["thread1_concealedloss"])
-								changed_data[1].concealedloss = tonumber(decoded_data["thread1_concealedloss"])
+								changed_data[1].clossrate = tonumber(decoded_data["thread1_concealedloss"])
 							end
 							if decoded_data["thread1_catchuprate"] ~= nil then
 								print("Set : forwarding thread 1 catchuprate")
@@ -650,12 +651,12 @@ function server(ns)
 							if decoded_data["thread2_loss"] ~= nil then
 								print("Set : forwarding thread 2 loss")
 								print(decoded_data["thread2_loss"])
-								changed_data[2].loss = tonumber(decoded_data["thread2_loss"])
+								changed_data[2].lossrate = tonumber(decoded_data["thread2_loss"])
 							end
 							if decoded_data["thread2_concealedloss"] ~= nil then
 								print("Set : forwarding thread 2 concealedloss")
 								print(decoded_data["thread2_concealedloss"])
-								changed_data[2].concealedloss = tonumber(decoded_data["thread2_concealedloss"])
+								changed_data[2].clossrate = tonumber(decoded_data["thread2_concealedloss"])
 							end
 							if decoded_data["thread2_catchuprate"] ~= nil then
 								print("Set : forwarding thread 2 catchuprate")
