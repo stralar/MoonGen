@@ -301,8 +301,9 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				last_activity = limiter:get_tsc_cycles()
 				ns.last_packet_time = ullToNumber(limiter:get_tsc_cycles())
 			end
+			local tmp_last_packet_time = ns.last_packet_time
 			if limiter:get_tsc_cycles() > last_activity + inactive_continuous_reception_cycle_time then
-				if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_continuous_reception_cycle_time then
+				if limiter:get_tsc_cycles() > tmp_last_packet_time + inactive_continuous_reception_cycle_time then
 
 					if debug then print("continuous_reception deactivating "..threadNumber) end
 					ns.continuous_reception = false
