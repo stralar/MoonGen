@@ -260,7 +260,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				-- emulate concealed losses
 				local closses = 0.0
-				while (math.random() < ns.thread[threadNumber].concealedloss) do
+				while (math.random() < ns.thread[threadNumber].clossrate) do
 					closses = closses + 1
 					if (ns.thread[threadNumber].catchuprate > 0) then
 						catchup_mode = true
