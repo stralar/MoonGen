@@ -229,7 +229,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 		if ns.first_rcc_connected then
 			if debug then print("Build RCC_CONNECTION "..threadNumber) end
 			last_activity = limiter:get_tsc_cycles()
-			while limiter:get_tsc_cycles() < last_activity + rcc_connection_build_delay_tsc_hz_ms do
+			while limiter:get_tsc_cycles() < last_activity + ns.rcc_connection_build_delay * tsc_hz_ms do
 				if not mg.running() then
 					return
 				end
@@ -240,7 +240,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			end
 			ns.first_rcc_connected = false
 			if time_stuck_in_loop > 0 then
-				time_stuck_in_loop = time_stuck_in_loop + rcc_connection_build_delay_tsc_hz_ms
+				time_stuck_in_loop = time_stuck_in_loop + ns.rcc_connection_build_delay * tsc_hz_ms
 			end
 			last_activity = limiter:get_tsc_cycles()
 		end
@@ -303,19 +303,17 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				ns.last_packet_time = ullToNumber(limiter:get_tsc_cycles())
 			end
 
-			if limiter:get_tsc_cycles() > last_activity + inactive_continuous_reception_cycle_time then
-				local result = pcall(get_ns_last_packet_time)
-				if result then
-					if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_continuous_reception_cycle_time then
+            local result = pcall(get_ns_last_packet_time)
+            if result then
+                if limiter:get_tsc_cycles() > ns.last_packet_time + ns.continuous_reception_inactivity_timer * tsc_hz_ms then
 
-						if debug then print("continuous_reception deactivating "..threadNumber) end
-						ns.continuous_reception = false
+                    if debug then print("continuous_reception deactivating "..threadNumber) end
+                    ns.continuous_reception = false
 
-						if debug then  print("short_DRX activating "..threadNumber) end
-						ns.short_DRX = true
-					end
-				end
-			end
+                    if debug then  print("short_DRX activating "..threadNumber) end
+                    ns.short_DRX = true
+                end
+            end
 		end
 
 		-- RCC_CONNECTED short_DRX
@@ -367,7 +365,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			end
 
 			-- if the the max of interactive Time from short DRX arrived, it will be changed to long DRX
-			if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_short_DRX_cycle_time then
+			if limiter:get_tsc_cycles() > ns.last_packet_time + (ns.short_DRX_inactivity_timer + ns.continuous_reception_inactivity_timer) * tsc_hz_ms then
 				if debug then  print("short_DRX deactivating after inactive time, "..threadNumber) end
 				ns.short_DRX = false
 
@@ -424,7 +422,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			end
 
 			-- if the the max of interactive Time from long DRX arrived, return to RCC_IDLE
-			if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_long_DRX_cycle_time then
+			if limiter:get_tsc_cycles() > ns.last_packet_time + (ns.long_DRX_inactivity_timer + ns.short_DRX_inactivity_timer + ns.continuous_reception_inactivity_timer)* tsc_hz_ms then
 
 				if debug then print("long_DRX deactivating after inactive time, "..threadNumber) end
 				ns.long_DRX = false
