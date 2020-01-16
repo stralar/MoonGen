@@ -92,7 +92,7 @@ function master(args)
 	ns.rcc_idle_cycle_length = args.rcc_idle_cycle_length
 	ns.rcc_connection_build_delay = args.rcc_connection_build_delay
 
-	ns.thread = {{rate = args.rate[1], latency = args.latency[1],  xlatency = args.xlatency[1],  loss = args.loss[1],  concealedloss = args.concealedloss[1],  catchuprate = args.catchuprate[1]}, {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  loss = args.loss[2],  concealedloss = args.concealedloss[2],  catchuprate = args.catchuprate[2]}}
+	ns.thread = {{rate = args.rate[1], latency = args.latency[1],  xlatency = args.xlatency[1],  lossrate = args.loss[1],  clossrate = args.concealedloss[1],  catchuprate = args.catchuprate[1]}, {rate = args.rate[2], latency = args.latency[2],  xlatency = args.xlatency[2],  lossrate = args.loss[2],  clossrate = args.concealedloss[2],  catchuprate = args.catchuprate[2]}}
 
 
 	-- start the forwarding tasks
@@ -160,7 +160,7 @@ end
 
 function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate,
 				 short_DRX_cycle_length, long_DRX_cycle_length, active_time, continuous_reception_inactivity_timer, short_DRX_inactivity_timer, long_DRX_inactivity_timer, rcc_idle_cycle_length, rcc_connection_build_delay)
-	print("forward with rate "..ns.thread[threadNumber].rate.." and latency "..ns.thread[threadNumber].latency.." and loss rate "..ns.thread[threadNumber].lossrate.." and concealedloss "..ns.thread[threadNumber].concealedloss.." and catchuprate "..ns.thread[threadNumber].catchuprate)
+	print("forward with rate "..ns.thread[threadNumber].rate.." and latency "..ns.thread[threadNumber].latency.." and loss rate "..ns.thread[threadNumber].lossrate.." and clossrate "..ns.thread[threadNumber].clossrate.." and catchuprate "..ns.thread[threadNumber].catchuprate)
 	local numThreads = 1
 
 	local linkspeed = txDev:getLinkStatus().speed
