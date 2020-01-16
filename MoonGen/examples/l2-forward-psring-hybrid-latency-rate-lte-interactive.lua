@@ -160,7 +160,7 @@ end
 
 function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency, lossrate, clossrate, catchuprate,
 				 short_DRX_cycle_length, long_DRX_cycle_length, active_time, continuous_reception_inactivity_timer, short_DRX_inactivity_timer, long_DRX_inactivity_timer, rcc_idle_cycle_length, rcc_connection_build_delay)
-	print("forward with rate "..ns.thread[threadNumber].rate.." and latency "..ns.thread[threadNumber].latency.." and loss rate "..ns.thread[threadNumber].lossrate.." and clossrate "..ns.thread[threadNumber].clossrate.." and catchuprate "..ns.thread[threadNumber].catchuprate)
+	print("forward with rate "..ns.thread[threadNumber].rate.." and latency "..ns.thread[threadNumber].latency.." and loss rate "..ns.thread[threadNumber].lossrate.." and concealedloss "..ns.thread[threadNumber].concealedloss.." and catchuprate "..ns.thread[threadNumber].catchuprate)
 	local numThreads = 1
 
 	local linkspeed = txDev:getLinkStatus().speed
@@ -260,7 +260,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				-- emulate concealed losses
 				local closses = 0.0
-				while (math.random() < ns.thread[threadNumber].clossrate) do
+				while (math.random() < ns.thread[threadNumber].concealedloss) do
 					closses = closses + 1
 					if (ns.thread[threadNumber].catchuprate > 0) then
 						catchup_mode = true
