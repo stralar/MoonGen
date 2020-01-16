@@ -271,7 +271,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 
 				local send_time = arrival_timestamp
 				--send_time = send_time + ((closses*concealed_resend_time + latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
-				print(ns.thread[threadNumber].latency)
+				if debug then print(ns.thread[threadNumber].latency) end
 				send_time = send_time + ((closses*concealed_resend_time + ns.thread[threadNumber].latency + extraDelay) * tsc_hz_ms + time_stuck_in_loop)
 
 				time_stuck_in_loop = 0
