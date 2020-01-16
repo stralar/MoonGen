@@ -199,25 +199,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	-- catch-up at line rate
 	local catchup_mode = false
 
-	-- between 0.32 and 2.56 sec
-	local rcc_idle_cycle_length_tsc_hz_ms = rcc_idle_cycle_length * tsc_hz_ms
-
-	local short_DRX_cycle_length_tsc_hz_ms = short_DRX_cycle_length * tsc_hz_ms
-	local long_DRX_cycle_length_tsc_hz_ms = long_DRX_cycle_length * tsc_hz_ms
-
-	--local active_time_tsc_hz_ms = active_time * tsc_hz_ms
-
-	-- will be reset after each send/received packet
-	-- timer is between 1ms - 2.56sec Paper-[10]
-	local inactive_continuous_reception_cycle_time = continuous_reception_inactivity_timer * tsc_hz_ms
-
-	local inactive_short_DRX_cycle_time = (short_DRX_inactivity_timer + continuous_reception_inactivity_timer) * tsc_hz_ms
-
-	local inactive_long_DRX_cycle_time = (long_DRX_inactivity_timer + short_DRX_inactivity_timer + continuous_reception_inactivity_timer)* tsc_hz_ms
-
-	-- 16 to 19 signalling messages
-	local rcc_connection_build_delay_tsc_hz_ms = rcc_connection_build_delay * tsc_hz_ms
-
 	-- in ms
 	local concealed_resend_time = 8
 
