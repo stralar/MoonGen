@@ -518,8 +518,8 @@ function server(ns)
 		function tcpserver.TCPServer:handle_stream(stream, address)
 			print("connection builded:")
 
-			local changed_data = {{rate = ns.thread[1].rate, latency = ns.thread[1].latency,  xlatency = ns.thread[1].xlatency,  lossrate = ns.thread[1].loss,  clossrate = ns.thread[1].concealedloss,  catchuprate = ns.thread[1].catchuprate},
-								  {rate = ns.thread[2].rate, latency = ns.thread[2].latency,  xlatency = ns.thread[2].xlatency,  lossrate = ns.thread[2].loss,  clossrate = ns.thread[2].concealedloss,  catchuprate = ns.thread[2].catchuprate}}
+			local changed_data = {{rate = ns.thread[1].rate, latency = ns.thread[1].latency,  xlatency = ns.thread[1].xlatency,  lossrate = ns.thread[1].lossrate,  clossrate = ns.thread[1].clossrate,  catchuprate = ns.thread[1].catchuprate},
+								  {rate = ns.thread[2].rate, latency = ns.thread[2].latency,  xlatency = ns.thread[2].xlatency,  lossrate = ns.thread[2].lossrate,  clossrate = ns.thread[2].clossrate,  catchuprate = ns.thread[2].catchuprate}}
 
 			while not stream:closed() and mg.running() do
 
@@ -542,7 +542,6 @@ function server(ns)
 						print(data)
 
 						local result = pcall(decode_wrapper, data)
-						local decoded_data = nil
 						if result then
 							print("Is a json")
 							local decoded_data = decode_wrapper(data)
