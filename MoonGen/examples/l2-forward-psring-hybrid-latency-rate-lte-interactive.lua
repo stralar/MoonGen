@@ -301,15 +301,19 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 				last_activity = limiter:get_tsc_cycles()
 				ns.last_packet_time = ullToNumber(limiter:get_tsc_cycles())
 			end
-			local tmp_last_packet_time = ns.last_packet_time
+
 			if limiter:get_tsc_cycles() > last_activity + inactive_continuous_reception_cycle_time then
-				if limiter:get_tsc_cycles() > tmp_last_packet_time + inactive_continuous_reception_cycle_time then
+				local result = pcall(get_ns_last_packet_time)
+				if result then
 
-					if debug then print("continuous_reception deactivating "..threadNumber) end
-					ns.continuous_reception = false
+					if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_continuous_reception_cycle_time then
 
-					if debug then  print("short_DRX activating "..threadNumber) end
-					ns.short_DRX = true
+						if debug then print("continuous_reception deactivating "..threadNumber) end
+						ns.continuous_reception = false
+
+						if debug then  print("short_DRX activating "..threadNumber) end
+						ns.short_DRX = true
+					end
 				end
 			end
 		end
@@ -471,7 +475,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
                     ns.continuous_reception = true
 
                     ns.first_rcc_connected = true
-
                     ns.last_packet_time = ullToNumber(limiter:get_tsc_cycles())
 
                     break
@@ -498,6 +501,9 @@ local function decode_wrapper(data)
 	return json:decode(data)
 end
 
+local function get_ns_last_packet_time()
+	return ns.last_packet_time
+end
 
 function server(ns)
 	print("Server Thread startet")
