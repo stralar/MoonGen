@@ -205,7 +205,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local short_DRX_cycle_length_tsc_hz_ms = short_DRX_cycle_length * tsc_hz_ms
 	local long_DRX_cycle_length_tsc_hz_ms = long_DRX_cycle_length * tsc_hz_ms
 
-	local active_time_tsc_hz_ms = active_time * tsc_hz_ms
+	--local active_time_tsc_hz_ms = active_time * tsc_hz_ms
 
 	-- will be reset after each send/received packet
 	-- timer is between 1ms - 2.56sec Paper-[10]
@@ -224,6 +224,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 	local time_stuck_in_loop = 0
 
 	while mg.running() do
+		local active_time_tsc_hz_ms = ns.active_time * tsc_hz_ms
 		-- RCC_IDLE to RCC_CONNECTED the delay
 		if ns.first_rcc_connected then
 			if debug then print("Build RCC_CONNECTION "..threadNumber) end
@@ -305,7 +306,6 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			if limiter:get_tsc_cycles() > last_activity + inactive_continuous_reception_cycle_time then
 				local result = pcall(get_ns_last_packet_time)
 				if result then
-
 					if limiter:get_tsc_cycles() > ns.last_packet_time + inactive_continuous_reception_cycle_time then
 
 						if debug then print("continuous_reception deactivating "..threadNumber) end
@@ -328,7 +328,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			time_stuck_in_loop = 0
 
 			-- time to wait
-			while ns.short_DRX and limiter:get_tsc_cycles() < last_activity + short_DRX_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
+			while ns.short_DRX and limiter:get_tsc_cycles() < last_activity + ns.short_DRX_cycle_length * tsc_hz_ms - active_time_tsc_hz_ms do
 				lcount = pipe:countPktsizedRing(ring.ring)
 				if (lcount > 0) and (packet_arrival_time == 0) then
 					packet_arrival_time = limiter:get_tsc_cycles()
@@ -385,7 +385,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
 			time_stuck_in_loop = 0
 
 			-- time to wait
-			while ns.long_DRX and limiter:get_tsc_cycles() < last_activity + long_DRX_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
+			while ns.long_DRX and limiter:get_tsc_cycles() < last_activity + ns.long_DRX_cycle_length * tsc_hz_ms - active_time_tsc_hz_ms do
 				lcount = pipe:countPktsizedRing(ring.ring)
 				if (lcount > 0) and (packet_arrival_time == 0) then
 					packet_arrival_time = limiter:get_tsc_cycles()
@@ -443,7 +443,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
             time_stuck_in_loop = 0
 
             -- time to wait
-            while limiter:get_tsc_cycles() < last_activity + rcc_idle_cycle_length_tsc_hz_ms - active_time_tsc_hz_ms do
+            while limiter:get_tsc_cycles() < last_activity + ns.rcc_idle_cycle_length * tsc_hz_ms - active_time_tsc_hz_ms do
                 lcount = pipe:countPktsizedRing(ring.ring)
                 if (lcount > 0) and (packet_arrival_time == 0) then
                     packet_arrival_time = limiter:get_tsc_cycles()
@@ -482,6 +482,7 @@ function forward(threadNumber, ns, ring, txQueue, txDev, rate, latency, xlatency
             end
         end
 	end
+
 end
 
 -- Help function:
@@ -501,9 +502,11 @@ local function decode_wrapper(data)
 	return json:decode(data)
 end
 
-local function get_ns_last_packet_time()
+function get_ns_last_packet_time()
 	return ns.last_packet_time
 end
+
+
 
 function server(ns)
 	print("Server Thread startet")
