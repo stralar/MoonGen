@@ -1,27 +1,26 @@
 {
-
-  "short_DRX_cycle_length": "123",
-  "long_DRX_cycle_length": "123",
-  "active_time": "123",
-  "short_DRX_inactivity_timer": "123",
-  "long_DRX_inactivity_timer": "123",
-  "rcc_idle_cycle_length": "123",
+  "short_DRX_cycle_length": "10",
+  "long_DRX_cycle_length": "20",
+  "active_time": "150",
+  "short_DRX_inactivity_timer": "1500",
+  "long_DRX_inactivity_timer": "6000",
+  "rcc_idle_cycle_length": "50",
   "rcc_connection_build_delay": "123",
 
-  "thread1_rate": "123",
-  "thread1_latency": "123",
-  "thread1_xlatency": "123",
+  "thread1_rate": "40",
+  "thread1_latency": "20",
+  "thread1_xlatency": "1",
   "thread1_queuedepth": "123",
-  "thread1_loss": "0.123",
-  "thread1_concealedloss": "0.123",
-  "thread1_catchuprate": "123",
+  "thread1_loss": "0.4",
+  "thread1_concealedloss": "0.1",
+  "thread1_catchuprate": "1",
 
-  "thread2_rate": "567",
-  "thread2_latency": "567",
-  "thread2_xlatency": "567",
-  "thread2_queuedepth": "567",
-  "thread2_loss": "0.567",
-  "thread2_concealedloss": "0.567",
-  "thread2_catchuprate": "567"
+  "thread2_rate": "40",
+  "thread2_latency": "20",
+  "thread2_xlatency": "1",
+  "thread2_queuedepth": "123",
+  "thread2_loss": "0.4",
+  "thread2_concealedloss": "0.1",
+  "thread2_catchuprate": "1"
 
 }
