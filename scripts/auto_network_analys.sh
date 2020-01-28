@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sourceInterface=2
-destinationInterface=0
+sourceInterface=0
+destinationInterface=1
 # in seconds
 bandwidthInterval=1
 pythonScript="$(cd "$(dirname "$0")" ; pwd)/network_analysis.py"

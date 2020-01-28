@@ -3,9 +3,9 @@
 
 # ssh Key should be used
 # username@hostname
-serverPC="lars@130.75.73.140"
-clientPC="lars@130.75.73.226"
-moonGenPC="lars@130.75.73.225"
+serverPC="lars@130.75.73.204"
+clientPC="lars@130.75.73.208"
+moonGenPC="lars@130.75.73.140"
 dagPC="stratmann@130.75.73.131"
 
 
@@ -19,14 +19,14 @@ moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-lte-catchup.lua"
 if ${downlink}
 then
     # Downlink
-    srcInterface="3"
-    destInterface="1"
+    srcInterface="2"
+    destInterface="4"
     testName="rnc-psr-downlink-u1000-t$testNumber-"
 
 else
     # Uplink
-    srcInterface="1"
-    destInterface="3"
+    srcInterface="2"
+    destInterface="4"
     testName="rnc-psr-uplink-u1000-t$testNumber-"
 fi
 
