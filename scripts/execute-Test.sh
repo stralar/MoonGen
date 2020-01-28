@@ -10,24 +10,24 @@ dagPC="stratmann@130.75.73.131"
 
 
 downlink=false
-testNumber="13"
+testNumber="01"
 
-destIPAdress="10.1.3.2"
+#destIPAdress="10.1.3.2"
 
-moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-lte.lua"
+moonGenScript="examples/l2-forward-psring-hybrid-latency-rate-lte-catchup.lua"
 
 if ${downlink}
 then
     # Downlink
     srcInterface="3"
-    destInterface="2"
-    testName="rnc-psr-downlink-t$testNumber-"
+    destInterface="1"
+    testName="rnc-psr-downlink-u1000-t$testNumber-"
 
 else
     # Uplink
-    srcInterface="2"
+    srcInterface="1"
     destInterface="3"
-    testName="rnc-psr-uplink-t$testNumber-"
+    testName="rnc-psr-uplink-u1000-t$testNumber-"
 fi
 
 iperfExecuteTime="4"
@@ -66,8 +66,11 @@ ssh $clientPC 'sudo killall rude' &
 
 sleep 1
 
+# Orignal
+#moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 38 -l 30 10 -q 350 1000 -c 0.01 0.01"
 
-moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 38 -l 30 10 -q 350 1000 -c 0.01 0.01"
+# catchup-rate test
+moonGenMainCommand="cd MoonGen/MoonGen; sudo ./build/MoonGen $moonGenScript -d $srcInterface $destInterface -r 40 38 -l 30 10 -q 350 1000 -u 1000 1000"
 moonGenTerminateCommand="sudo killall MoonGen"
 
 ssh $moonGenPC $moonGenMainCommand &
