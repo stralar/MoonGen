@@ -12,7 +12,7 @@ parser.add_argument('-ls', dest='lastSend', action='store_true', help='time in F
 parser.add_argument('-fs', dest='firstSend', action='store_true', help='time in Fly for the first sended Package')
 parser.add_argument('-nd', dest='noDrop', action='store_true', help='time in Fly, Skip droped packages')
 parser.add_argument('--all', dest='all', action='store_true', help='execute all functions')
-parser.add_argument('--create-nd', dest='create_nd', action='store_true', help='create a ne file without droped packages')
+parser.add_argument('--create-nd', dest='create_nd', action='store_true', help='create a new file without droped packages')
 parser.add_argument('--udp', dest='udp', action='store_true', help='If the Packages are UDP')
 parser.add_argument('-b', dest='bandWidthInterval', type=float, help='Set the Interval in sec for bits per interval')
 
@@ -71,9 +71,6 @@ print(fileName)
 # TShark command for UDP packages
 # tshark -r file.erf -T fields -e frame.number -e frame.time_epoch -e erf.flags.cap -e ip.src -e udp.srcport -e ip.dst -e udp.dstport -e ip.proto -e tcp.len -e ip.id > file.csv
 
-# GnuPlot command
-# plot 'myFile.csv' using 2:3 with lines
-# replot 'myFile.csv' using 2:3 with lines
 
 
 
@@ -89,6 +86,7 @@ def pcktInFlyLastSendTCP():
         for row in csvReader:
             csvArray.append(row)
 
+    # Remove old files with that name
     resultWritePackage = open(fileSaveNamePckt, 'w')
     resultWriteByte = open(fileSaveNameByte, 'w')
     resultWriteLatency = open(fileSaveNameLatency, 'w')
@@ -284,8 +282,8 @@ def pcktInFlyNoDropTCP():
     
     startTimeStamp = float(csvArray[0][1])  
     
-    packageInFlyCount = -1;
-    byteInFlyCount = 0;
+    packageInFlyCount = -1
+    byteInFlyCount = 0
       
     packageInFly = []
 
@@ -367,7 +365,7 @@ def pcktInFlyNoDropTCP():
             pass
     print("Finished pcktInFlyNoDropTCP")
 
-
+# This function calculate the UDP packets in Fly from the source to destination packet
 def pcktInFlyFirstSendUDP():
     fileSaveNamePckt = fileName + '_pkts_in_fly.csv'
     fileSaveNameByte = fileName + '_bytes_in_fly.csv'
@@ -384,6 +382,151 @@ def pcktInFlyFirstSendUDP():
             if startTimeStamp == None:
                 startTimeStamp = float(row[1])
 
+                csvArray.append(row)
+
+    resultWritePackage = open(fileSaveNamePckt, 'w')
+    resultWriteByte = open(fileSaveNameByte, 'w')
+    resultWriteLatency = open(fileSaveNameLatency, 'w')
+    resultWriteDroped = open(fileSaveNameDroped, 'w')
+    resultWriteDetails = open(fileSaveNameDetails, 'w')
+
+
+    startTimeStamp = float(csvArray[0][1])
+
+    packageInFlyCount = 0
+    byteInFlyCount = 0
+
+    arrivedPackageCount = 0
+    dropedPackageCount = 0
+
+    packageInFly = []
+
+    sumBytes = 0
+
+    # Mark the droped Packages
+    # Actual the mark is on the 5. Postion from the csv File this is the srcPort
+    # in the real function  is an INT cast on this Postion so its failed if the Package is droped
+    for i in range(len(csvArray)):
+        if(int(csvArray[i][2]) == interfaceSource):
+            droped = True
+            for j in range(i+1, len(csvArray)):
+                if (int(csvArray[i][2]) == interfaceSource and int(csvArray[j][2]) == interfaceDestination and str(csvArray[i][9]) == str(csvArray[j][9])):
+                    droped = False
+                    break
+            #print(droped)
+            if droped:
+                csvArray[i][7] = "droped"
+                dropedPackageCount += 1
+            else:
+                arrivedPackageCount += 1
+
+    # real Function
+    for i in range(len(csvArray)):
+
+        # Exception for the float cast
+        try:
+            # The Postion from ip.ID is 9, look pls "auto_tshark-udp.sh"
+            ipId = csvArray[i][9]
+
+            # Frame Number from Fragments,
+            # this exists only in the last frame from a fragmented Package
+            #frameId = csvArray[i][10]
+
+
+            # Droped test with an INT cast, if the Port is not an INT
+            # thow an exception -> do nothing and go to the next value
+            int(csvArray[i][7])
+
+            # If the Package is sended for the first time
+            #if (ipId not in ipIdSend and float(csvArray[i][2]) == interfaceSource):
+            if (float(csvArray[i][2]) == interfaceSource):
+
+                sourcePckt = csvArray[i]
+
+                timeStampSrc = float(sourcePckt[1]) - startTimeStamp
+
+                packageInFlyCount += 1
+                byteInFlyCount += int(csvArray[i][8])
+
+                packageInFly.append([ipId, timeStampSrc, packageInFlyCount, byteInFlyCount])
+
+                sumBytes += int(csvArray[i][8])
+
+
+            # If the Package is arrived
+            #elif (ipId in ipIdSend and float(csvArray[i][2]) == interfaceDestination):
+            elif (float(csvArray[i][2]) == interfaceDestination):
+
+                packageInFlyCount -= 1
+                byteInFlyCount -= int(csvArray[i][8])
+
+                for pck in packageInFly:
+                    if (pck[0] == ipId):
+                        packageString = str(pck[0]) + "\t" + str(pck[1]) + "\t" + str(pck[2]) + "\n"
+                        byteString = str(pck[0]) + "\t" + str(pck[1]) + "\t" + str(pck[3]) + "\n"
+
+                        latency = (float(csvArray[i][1]) - startTimeStamp) - pck[1]
+                        latencyString = str(pck[0]) + "\t" + str(pck[1]) + "\t" + str(latency) + "\n"
+
+                        # It open and close so the results will be save if we end the script
+                        resultWritePackage = open(fileSaveNamePckt, 'a')
+                        resultWritePackage.write(packageString)
+                        resultWritePackage.close()
+
+                        # It open and close so the results will be save if we end the script
+                        resultWriteByte = open(fileSaveNameByte, 'a')
+                        resultWriteByte.write(byteString)
+                        resultWriteByte.close()
+
+                        # It open and close so the results will be save if we end the script
+                        resultWriteLatency = open(fileSaveNameLatency, 'a')
+                        resultWriteLatency.write(latencyString)
+                        resultWriteLatency.close()
+
+                        packageInFly.remove(pck)
+                        break
+
+        except ValueError as e:
+            # print "error",e,"on line",i
+            if(str(csvArray[i][7]) == 'droped'):
+
+                timeStampSrc = float(csvArray[i][1]) - startTimeStamp
+
+                dropedString = str(csvArray[i][9]) + "\t" + str(timeStampSrc) + "\t" + str(packageInFlyCount) + "\n"
+
+                # It open and close so the results will be save if we end the script
+                resultWriteDroped = open(fileSaveNameDroped, 'a')
+                resultWriteDroped.write(dropedString)
+                resultWriteDroped.close()
+            pass
+
+    detailsString = "throughput:\t" + str(sumBytes / (arrivedPackageCount + dropedPackageCount)) + "\tarrived:\t" + str(arrivedPackageCount) + "\tdropped:\t" + str(dropedPackageCount)
+
+    resultWriteDetails = open(fileSaveNameDetails, 'w')
+    resultWriteDetails.write(detailsString)
+    resultWriteDetails.close()
+
+    print("Finished pcktInFlyFirstSendUDP in " + str(time.clock()) + " seconds")
+
+
+# This function calculate the UDP packets in Fly from the source to destination packet
+# This is a special function because it only use 2 seconds after the first second
+def pcktInFlyFirstSendUDPInterval2sec():
+    fileSaveNamePckt = fileName + '_pkts_in_fly.csv'
+    fileSaveNameByte = fileName + '_bytes_in_fly.csv'
+    fileSaveNameLatency = fileName + '_latency.csv'
+    fileSaveNameDroped = fileName + '_droped.csv'
+    fileSaveNameDetails = fileName + '_details.csv'
+
+
+    csvArray = []
+    startTimeStamp = None
+    with open(filePath, 'r') as csvDataFile:
+        csvReader = csv.reader(csvDataFile, delimiter='\t')
+        for row in csvReader:
+            if startTimeStamp == None:
+                startTimeStamp = float(row[1])
+            # Only add packets to the Array if they are in the right Interaval
             if (float(row[1]) - startTimeStamp >= 1 and float(row[1]) - startTimeStamp <= 3):
                 csvArray.append(row)
 
@@ -511,13 +654,13 @@ def pcktInFlyFirstSendUDP():
 
     print("Finished pcktInFlyFirstSendUDP in " + str(time.clock()) + " seconds")
 
-
+# This function calculate the UDP packets in Fly from the destination to source packet
+# This is faster because it only use the received packets
+# but cant count the dropped packets
 def pcktInFlyFirstSendReverseUDP():
     fileSaveNamePckt = fileName + '_pkts_in_fly.csv'
     fileSaveNameByte = fileName + '_bytes_in_fly.csv'
     fileSaveNameLatency = fileName + '_latency.csv'
-    fileSaveNameDroped = fileName + '_droped.csv'
-    fileSaveNameDetails = fileName + ' details.csv'
 
     csvArray = []
     with open(filePath, 'r') as csvDataFile:
@@ -528,8 +671,6 @@ def pcktInFlyFirstSendReverseUDP():
     resultWritePackage = open(fileSaveNamePckt, 'w')
     resultWriteByte = open(fileSaveNameByte, 'w')
     resultWriteLatency = open(fileSaveNameLatency, 'w')
-    resultWriteDroped = open(fileSaveNameDroped, 'w')
-    resultWriteDetails = open(fileSaveNameDetails, 'w')
 
     startTimeStamp = float(csvArray[0][1])
 
@@ -537,7 +678,6 @@ def pcktInFlyFirstSendReverseUDP():
     byteInFlyCount = 0
 
     arrivedPackageCount = 0
-    dropedPackageCount = 0
 
     packageInFly = []
 
@@ -612,8 +752,105 @@ def pcktInFlyFirstSendReverseUDP():
 
     print("Finished pcktInFlyFirstSendReverseUDP in " + str(time.clock()) + " seconds")
 
-
+# This function calculate the bandwidth from UDP packets
 def bandwidthUDP():
+    fileSaveNameBandwidth = fileName + '_bit_per_' + str(bandWidthInterval) + 's.csv'
+
+
+    csvArray = []
+    startTimeStamp = None
+    with open(filePath, 'r') as csvDataFile:
+        csvReader = csv.reader(csvDataFile, delimiter='\t')
+        for row in csvReader:
+            if startTimeStamp == None:
+                startTimeStamp = float(row[1])
+
+            csvArray.append(row)
+
+    resultWriteBandwidth = open(fileSaveNameBandwidth, 'w')
+
+    startTimeStamp = float(csvArray[0][1])
+
+    firstInIntervall = float(0)
+
+    timeCounter = float(0)
+
+    byteTransfared = float(0)
+
+
+    # real Function
+    for i in range(len(csvArray)):
+
+        # Exception for the float cast
+        try:
+            # The Postion from ip.ID is 9, look pls "auto_tshark-udp.sh"
+            ipId = csvArray[i][9]
+
+            # Droped test with an INT cast, if the Port is not an INT
+            # thow an exception -> do nothing and go to the next value
+            int(csvArray[i][7])
+
+            # TODO zwei arten zu speichern
+            # TODO 1. wir benutzen den Intervall Counter um die Bandbreite abzuspeichern <- derzeit benutzt
+            # TODO 2. Oder wir nutzen die timeStamps der Pakages und sagen zu diesem Pakage welche Bandbreite zu dem Zeitpunkt gemessen wurde
+            # If the Package is arrived
+
+
+            if(float(csvArray[i][2]) == interfaceDestination):
+                destinationPckt = csvArray[i]
+                timeStampDest = float(destinationPckt[1]) - startTimeStamp
+
+
+                #if(i == len(csvArray) - 1):
+                if(False):
+                    actualBandwidth = byteTransfared / bandWidthInterval
+                    byteString = str(ipId) + "\t" + str(timeCounter - 1 + timeStampDest - firstInIntervall) + "\t" + str((actualBandwidth * 8) / (timeStampDest - firstInIntervall)) + "\n"
+
+                    resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
+                    resultWriteBandwidth.write(byteString)
+                    resultWriteBandwidth.close()
+
+                    byteTransfared = 0
+                    timeCounter += bandWidthInterval
+                    firstInIntervall = float(destinationPckt[1]) - startTimeStamp
+                    break
+                elif((timeStampDest - firstInIntervall) < bandWidthInterval):
+                    # die 46 Byte kommen von preamble, SFD, MAC-DEST, MAC-SRC, FCS, inter-packet
+                    byteTransfared += float(destinationPckt[8]) - 46
+                else:
+                    actualBandwidth = byteTransfared / bandWidthInterval
+
+                    byteString = str(ipId) + "\t" + str(timeCounter) + "\t" + str(actualBandwidth * 8) + "\n"
+
+                    resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
+                    resultWriteBandwidth.write(byteString)
+                    resultWriteBandwidth.close()
+
+                    byteTransfared = float(0)
+                    timeCounter += bandWidthInterval
+                    firstInIntervall = float(destinationPckt[1]) - startTimeStamp
+                    #firstInIntervall += bandWidthInterval
+
+
+
+        except ValueError as e:
+
+            pass
+    # last value, if the interval does not got to the end
+    actualBandwidth = byteTransfared / bandWidthInterval
+
+    byteString = str(ipId) + "\t" + str(timeCounter) + "\t" + str(actualBandwidth * 8) + "\n"
+
+    resultWriteBandwidth = open(fileSaveNameBandwidth, 'a')
+    resultWriteBandwidth.write(byteString)
+    resultWriteBandwidth.close()
+
+
+    print("Finished Bandwidth")
+
+# This function calculate the bandwidth from UDP packets
+# This is a special function because it only use 2 seconds after the first second
+def bandwidthUDPInterval2sec():
     fileSaveNameBandwidth = fileName + '_bit_per_' + str(bandWidthInterval) + 's.csv'
 
 
@@ -640,8 +877,6 @@ def bandwidthUDP():
 
 
     # real Function
-    # TODO Idee: Man zaehlt die Bytes der Packete und kontorlliert die Differenz der TimeStamps bis diese groesser als das vorgeschrieben Intervall sind
-    # TODO danach teil man einfach durch die Zeit und beginnt von neuem
     for i in range(len(csvArray)):
 
         # Exception for the float cast
@@ -699,6 +934,7 @@ def bandwidthUDP():
         except ValueError as e:
 
             pass
+    # last value, if the interval does not got to the end
     actualBandwidth = byteTransfared / bandWidthInterval
 
     byteString = str(ipId) + "\t" + str(timeCounter) + "\t" + str(actualBandwidth * 8) + "\n"
@@ -714,7 +950,7 @@ def bandwidthUDP():
 if(bandWidthInterval > 0):
 
     print("Start badnwidth")
-    threading.Thread(target=bandwidthUDP(), args=()).start()
+    threading.Thread(target=bandwidthUDPInterval2sec(), args=()).start()
 
 # Check the udp Flag
 if udpTrue:
@@ -727,7 +963,7 @@ if udpTrue:
         if udpTrue or firstSend:
             try:
                 print("Start Thread: Package in Fly from the first sended Package")
-                threading.Thread(target=pcktInFlyFirstSendUDP, args=()).start()
+                threading.Thread(target=pcktInFlyFirstSendUDPInterval2sec, args=()).start()
                 #threading.Thread(target=pcktInFlyFirstSendReverseUDP, args=()).start()
 
                 
@@ -737,8 +973,6 @@ if udpTrue:
         # Check no Drop parameter
         if noDrop:
             print("The Parameter noDrop (nd) has no affect on UDP")
-
-
 else:
 
     # Check execute all functions
@@ -784,7 +1018,3 @@ else:
                 
             except:
                 print("Error: unable to start TCP noDrop thread")
-            
-            
-            
-            

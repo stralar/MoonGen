@@ -1,5 +1,9 @@
 #!/bin/bash
 
+sourceInterface=0
+destinationInterface=1
+# in seconds
+bandwidthInterval=1
 
 pythonScript="$(cd "$(dirname "$0")" ; pwd)/network_analysis.py"
 
@@ -10,6 +14,6 @@ do
     if [ ${srcFile:(-3)} == "csv" ]
         then
 
-            python $pythonScript -p $srcFile -s 2 -d 0 --udp -b 1
+            python $pythonScript -p $srcFile -s $sourceInterface -d $destinationInterface --udp -b $bandwidthInterval
     fi
 done

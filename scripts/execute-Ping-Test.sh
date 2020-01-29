@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This script execute the Ping command and saves the times
+# The optional Parameters are interpacket values
 
 destIPAdress="10.1.3.3"
 #destIPAdress="localhost"
@@ -22,7 +24,7 @@ then
         interPacketGap+=($time)
     done
 else
-    interPacketGap+=(0.01 0.2 0.3 2.5 2.6 11 10.5 10.6)
+    interPacketGap+=(0.01 0.2 0.3 2.5 2.6 11.0 10.5 10.6)
 fi
 
 for (( i=0; i<${#interPacketGap[@]}; i++ ));
@@ -36,10 +38,10 @@ do
     echo "$outputFileName will be finished at $(date +%T --date="@$(echo "$(date '+%s') + ${interPacketGap[i]} * $pingMaxCount" | bc)")"
 
 
-        # ping "-c $pingMaxCount -i $interPacketGap $destIPAdress"
-        # rand=$(echo "scale=2;$((RANDOM % 100)) / 100" | bc)
-        # pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} $destIPAdress | tr " " "\n")
-	pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} $destIPAdress > $outputLogName)
+    # ping "-c $pingMaxCount -i $interPacketGap $destIPAdress"
+    # rand=$(echo "scale=2;$((RANDOM % 100)) / 100" | bc)
+    # pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} $destIPAdress | tr " " "\n")
+	  pingData=$(sudo ping -c $pingMaxCount -i ${interPacketGap[i]} $destIPAdress > $outputLogName)
 
     echo "$outputFileName is Finished at $(date +%T)"
 

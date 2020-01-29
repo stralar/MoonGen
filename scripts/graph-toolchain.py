@@ -21,7 +21,7 @@ from operator import itemgetter
 
 
 parser = argparse.ArgumentParser(description='Programm create a PIF list')
-parser.add_argument('-n', '--name', help='Please give a Data path to the csv File, example: rnc-psr-tXX')
+parser.add_argument('-n', '--name', help='Please give a Data path to the csv File, example: rnc-psr-tXX-r')
 parser.add_argument('-p', '--ping', help='Please give a Data path to the csv File, example: ping-psr-tXX')
 
 
@@ -525,8 +525,6 @@ class CCDF():
 
 
         plt.close()
-
-
 
 
 if __name__ == '__main__':
